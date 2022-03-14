@@ -18,6 +18,13 @@ def synthetic_data(w, b, num_examples):
 
 
 def data_iter(batch_size, features, labels):
+    """
+    从总数据集中每次迭代返回一个batch_size大小的数据
+    :param batch_size:
+    :param features:
+    :param labels:
+    :return:
+    """
     num_examples = len(features)
     indices = list(range(num_examples))
     # 这些样本是随机读取的，没有特定的顺序
@@ -27,16 +34,15 @@ def data_iter(batch_size, features, labels):
     for i in range(0, num_examples, batch_size):
         #
         batch_indices = torch.tensor(indices[i: min(i + batch_size, num_examples)])  #
-
         yield features[batch_indices], labels[batch_indices]
 
 
 def linreg(X, w, b):
     """
     线性模型
-    :param X:
-    :param w:
-    :param b:
+    :param X:数据
+    :param w:权重
+    :param b:偏置值
     :return:
     """
     return torch.matmul(X, w) + b
@@ -52,13 +58,15 @@ def squared_loss(y_hat, y):
 def sgd(params, lr, batch_size):
     """
     Small Gradient Descent
-    小批量随机梯度下降
+    当一个参数没有显式解的时候,使用该方法去逼近最终解
+    小批量随机梯度下降,获取参数
     :param params: 给定的参数 w 和b
     :param lr: 学习率  learnRate
     :param batch_size:
     :return:
     """
     with torch.no_grad():
+        # 在没有梯度的条件下做这些事情
         for param in params:
             param -= lr * param.grad / batch_size  # 除以batch_size是因为我们是对整个进行求和,需要进行归一化处理
             param.grad.zero_()
@@ -83,7 +91,8 @@ if __name__ == '__main__':
     for epoch in range(num_epochs):
         for X, y in data_iter(batch_size, features, labels):
             l = loss(net(X, w, b), y)  # l.shape = batch_size * 1
-            l.sum().backward()
+            x = l.sum()
+            x.backward()
             sgd([w, b], lr, batch_size)
         with torch.no_grad():
             # 下面的操作不需要计算梯度
