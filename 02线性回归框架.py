@@ -1,5 +1,9 @@
 import random
 import torch
+from torch.utils import data  # 数据处理模块
+
+from d2l import torch as d2l
+import numpy as np
 
 
 def synthetic_data(w, b, num_examples):
@@ -33,6 +37,7 @@ def data_iter1(batch_size, features, labels):
     indices = indices[:batch_size]  # 打乱顺序
     return zip(features[indices], labels[indices])
 
+
 def data_iter(batch_size, features, labels):
     num_examples = len(features)
     indices = list(range(num_examples))
@@ -42,7 +47,7 @@ def data_iter(batch_size, features, labels):
 
     for i in range(0, num_examples, batch_size):
         #
-        batch_indices = torch.tensor(indices[i: min(i + batch_size, num_examples)]) #
+        batch_indices = torch.tensor(indices[i: min(i + batch_size, num_examples)])  #
 
         yield features[batch_indices], labels[batch_indices]
 
@@ -80,34 +85,31 @@ def sgd(params, lr, batch_size):
             param.grad.zero_()
 
 
+def load_array(data_arrays, batch_size, is_train=True):
+    """
+    构造一个Torch的数据迭代器
+    :param data_arrays:
+    :param batch_size:
+    :param is_train:如果是训练集,则需要打乱顺序
+    :return:
+    """
+    dataSet = data.TensorDataset(*data_arrays)  # *表示将tuple中的元素进行拆解
+    return data.DataLoader(dataSet, batch_size, shuffle=is_train)
+
+
 if __name__ == '__main__':
-    # 生成数据集
-    true_w = torch.tensor([2, -3.4])
-    true_b = 4.2
-    features, labels = synthetic_data(true_w, true_b, 1000)
-
-    # 初始化模型参数
-    w = torch.normal(0, 0.01, size=(2, 1), requires_grad=True)
-    b = torch.zeros(1, requires_grad=True)  # 偏差是一个标量
-
-    batch_size = 10
+    batch_size = 2
     num_epochs = 3
     net = linreg
     loss = squared_loss
     lr = .03
 
-    for epoch in range(num_epochs):
-        for X, y in data_iter(batch_size, features, labels):
-            l = loss(net(X, w, b), y)  # l.shape = batch_size * 1
-            l.sum().backward()
-            sgd([w, b], lr, batch_size)
-        with torch.no_grad():
-            # 下面的操作不需要计算梯度
-            # 对所有的样本进行计算损失
-            train_l = loss(net(features, w, b), labels)
-            print(f"epoch{epoch + 1},loss{float(train_l.mean()):f}")
+    # 生成数据集,依旧使用手动生成
+    true_w = torch.tensor([2, -3.4])
+    true_b = 4.2
+    features, labels = synthetic_data(true_w, true_b, 1000)
+    # 将生成的数据集保存为torch的TensorDataSet
+    data_loader = load_array((features, labels), batch_size, is_train=False)
+    while True:
+        now_train = next(iter(data_loader))
 
-    print("w=", w)
-    print("b=", b)
-    print(f"w的误差:{true_w - w.reshape(true_w.shape)}")
-    print(f"b的误差:{true_b - b}")
