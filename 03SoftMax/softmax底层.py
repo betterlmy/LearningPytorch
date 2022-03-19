@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torchvision
 from memory_profiler import profile
@@ -6,6 +7,7 @@ from torchvision import transforms
 import d2l
 from Timer import Timer
 from IPython import display
+import pandas as pd
 
 
 class Accumulator:
@@ -78,7 +80,17 @@ class Animator:
         display.clear_output(wait=True)
 
 
-@profile
+class Updator():
+    def __init__(self, net, batch_size, lr):
+        self.net = net
+        self.batch_size = batch_size
+        self.lr = lr
+
+    def step(self):
+        return d2l.sgd([self.net.W, self.net.b], self.lr, self.batch_size)
+
+
+# @profile
 def loadFashionMnistData(batch_size, resize=None):
     """
     下载FashionMnist数据集并加载到内存中
@@ -143,6 +155,18 @@ def net_accuracy(net, data_iter):
     return float(metric[0]) * 100 / metric[1]
 
 
+def save_params(net):
+    pd.DataFrame(net.W.detach().numpy()).to_csv('./netParams/W.CSV', index=False)  # 不保存列名
+    pd.DataFrame(net.b.detach().numpy()).to_csv('./netParams/b.CSV', index=False)  # 不保存列名
+    print("写入成功")
+
+
+def get_params(net, W_path='./netParams/W.CSV', b_path='./netParams/b.CSV'):
+    net.W = torch.from_numpy(np.array(pd.read_csv(W_path))).type(torch.float)
+    net.b = torch.from_numpy(np.array(pd.read_csv(b_path))).type(torch.float).flatten()
+    return net
+
+
 def train_epoch(net, train_iter, loss, updater):
     if isinstance(net, torch.nn.Module):
         net.train()  # 设置为训练模式
@@ -175,21 +199,12 @@ def train(net, train_iter, test_iter, loss, num_epochs, updater):
         train_metrics = train_epoch(net, train_iter, loss, updater)
         test_acc = net_accuracy(net, test_iter)
         animator.add(epoch + 1, train_metrics + (test_acc,))
+    save_params(net)
 
     train_loss, train_acc = train_metrics
     # assert train_loss < .5, train_loss
     # assert 1 >= train_acc > .7, train_acc
     # assert 1 >= test_acc > 0.7, test_acc
-
-
-class Updator():
-    def __init__(self, net, batch_size, lr):
-        self.net = net
-        self.batch_size = batch_size
-        self.lr = lr
-
-    def step(self):
-        return d2l.sgd([self.net.W, self.net.b], self.lr, self.batch_size)
 
 
 def predict(net, test_iter, n=6):  # @save
@@ -198,12 +213,17 @@ def predict(net, test_iter, n=6):  # @save
         break
     trues = get_fashion_mnist_labels(y)
     preds = get_fashion_mnist_labels(net.count(X).argmax(axis=1))
-    titles = [true + '\n' + pred for true, pred in zip(trues, preds)]
-    d2l.show_images(
-        X[0:n].reshape((n, 28, 28)), 1, n, titles=titles[0:n])
+    correct_preds = [true == pred for true, pred in zip(trues, preds)]
+    # titles = [true + '\n' + pred for true, pred in zip(trues, preds)]
+    data = np.vstack((np.array(trues), np.array(preds), np.array(correct_preds))).T
+    df1 = pd.DataFrame(data=data, columns=['真实', '预测', '是否相等'])
+    print(df1)
+    print(f"正确率:{float(sum(correct_preds) * 100 / len(correct_preds))}%")
+    # d2l.show_images(
+    #     X[0:n].reshape((n, 28, 28)), 1, n, titles=titles[0:n])
 
 
-@profile
+# @profile
 def main():
     batch_size = 64
     # 加载数据集
@@ -220,9 +240,10 @@ def main():
     num_epochs = 3
     net = sm_net(W, b)
     updater = Updator(net, batch_size, lr)
-    # 开始训练网络
-    train(net, train_iter, test_iter, cross_entropy, num_epochs, updater)
+    # 开始训练网络,训练的同时将参数保存到本地csv文件
+    # train(net, train_iter, test_iter, cross_entropy, num_epochs, updater)
     # 预测
+    net = get_params(net)
     predict(net, test_iter)
     del train_iter
     del test_iter
