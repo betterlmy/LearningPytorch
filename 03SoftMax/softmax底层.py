@@ -39,8 +39,8 @@ class Animator:
         for x, y, fmt in zip(self.X, self.Y, self.fmts):
             self.axes[0].plot(x, y, fmt)
         self.config_axes()
-        display.display(self.fig)
-        display.clear_output(wait=True)
+        # display.display(self.fig)
+        # display.clear_output(wait=True)
 
 
 def loadFashionMnistData(batch_size, resize=None):
@@ -74,8 +74,8 @@ def get_fashion_mnist_labels(labels):
 def softmax(x):
     """
     求得所有的x的softmax值
-    :param x:
-    :return:
+    :param x:计算的矩阵
+    :return: 返回每个位置的比例
     """
     X_exp = torch.exp(x)
     partition = X_exp.sum(1, keepdim=True)
@@ -132,8 +132,11 @@ class sm_net:
     def __init__(self, W, b):
         self.W = W
         self.b = b
+        self.count_times = 0
 
     def count(self, X):
+        self.count_times += 1
+        print(self.count_times)
         return softmax(torch.matmul(X.reshape(-1, self.W.shape[0]), self.W) + self.b)
 
 
@@ -168,6 +171,7 @@ def train(net, train_iter, test_iter, loss, num_epochs, updater):
     animator = Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[.3, .9],
                         legend=['train_loss', 'train_acc', 'test_acc'])
     for epoch in range(num_epochs):
+        print(('*' * 10 + str(epoch + 1) + '*' * 10).center(50))
         train_metrics = train_epoch(net, train_iter, loss, updater)
         test_acc = net_accuracy(net, test_iter)
         animator.add(epoch + 1, train_metrics + (test_acc,))
@@ -183,7 +187,7 @@ def updater(net, batch_size):
 
 
 def predict(net, test_iter, n=6):  # @save
-    """预测标签（定义见第3章）"""
+    """预测标签"""
     for X, y in test_iter:
         break
     trues = d2l.get_fashion_mnist_labels(y)
@@ -194,7 +198,6 @@ def predict(net, test_iter, n=6):  # @save
 
 
 if __name__ == '__main__':
-    d2l.use_svg_display()  # 使用svg显示图片 清晰度更高?
 
     batch_size = 64
     train_iter, test_iter = loadFashionMnistData(batch_size)
