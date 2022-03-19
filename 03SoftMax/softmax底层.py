@@ -1,10 +1,45 @@
 import torch
 import torchvision
+from memory_profiler import profile
 from torch.utils import data
 from torchvision import transforms
 import d2l
 from Timer import Timer
 from IPython import display
+
+
+class Accumulator:
+    '''在n个变量上累加'''
+
+    def __init__(self, n):
+        self.data = [.0] * n
+
+    def add(self, *args):
+        num = 0
+        for arg in args:
+            self.data[num] += float(arg)
+            num += 1
+        # 添加数据
+        # self.data = [a + float(b) for a, b in zip(self.data, args)]
+
+    def reset(self):
+        # 归零
+        self.data = [.0] * len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+
+class sm_net:
+    def __init__(self, W, b):
+        self.W = W
+        self.b = b
+        self.count_times = 0
+
+    def count(self, X):
+        # self.count_times += 1
+        # print(self.count_times)
+        return softmax(torch.matmul(X.reshape(-1, self.W.shape[0]), self.W) + self.b)
 
 
 class Animator:
@@ -39,10 +74,11 @@ class Animator:
         for x, y, fmt in zip(self.X, self.Y, self.fmts):
             self.axes[0].plot(x, y, fmt)
         self.config_axes()
-        # display.display(self.fig)
-        # display.clear_output(wait=True)
+        display.display(self.fig)
+        display.clear_output(wait=True)
 
 
+@profile
 def loadFashionMnistData(batch_size, resize=None):
     """
     下载FashionMnist数据集并加载到内存中
@@ -60,8 +96,9 @@ def loadFashionMnistData(batch_size, resize=None):
     print("数据集加载成功", len(mnist_train), len(mnist_test))  # 60000 ,10000
 
     num_workers = 4  # 设置读取图片的进程数量 小于cpu的核心数
-    return (data.DataLoader(mnist_train, batch_size, shuffle=True, num_workers=num_workers),
-            data.DataLoader(mnist_test, batch_size, shuffle=True, num_workers=num_workers))
+    loader = (data.DataLoader(mnist_train, batch_size, shuffle=True, num_workers=num_workers),
+              data.DataLoader(mnist_test, batch_size, shuffle=True, num_workers=num_workers))
+    return loader
 
 
 def get_fashion_mnist_labels(labels):
@@ -94,28 +131,6 @@ def num_correct(y_hat, y):
     return cmp.type(torch.int).sum()
 
 
-class Accumulator:
-    '''在n个变量上累加'''
-
-    def __init__(self, n):
-        self.data = [.0] * n
-
-    def add(self, *args):
-        num = 0
-        for arg in args:
-            self.data[num] += float(arg)
-            num += 1
-        # 添加数据
-        # self.data = [a + float(b) for a, b in zip(self.data, args)]
-
-    def reset(self):
-        # 归零
-        self.data = [.0] * len(self.data)
-
-    def __getitem__(self, idx):
-        return self.data[idx]
-
-
 def net_accuracy(net, data_iter):
     if isinstance(net, torch.nn.Module):
         # 判断net是不是nn的一个模块 如果是 将网络设置为评估模式 告诉其不要计算梯度了 只用计算准确率
@@ -126,18 +141,6 @@ def net_accuracy(net, data_iter):
         for X, y in data_iter:
             metric.add(num_correct(net.count(X), y), y.numel())
     return float(metric[0]) * 100 / metric[1]
-
-
-class sm_net:
-    def __init__(self, W, b):
-        self.W = W
-        self.b = b
-        self.count_times = 0
-
-    def count(self, X):
-        self.count_times += 1
-        print(self.count_times)
-        return softmax(torch.matmul(X.reshape(-1, self.W.shape[0]), self.W) + self.b)
 
 
 def train_epoch(net, train_iter, loss, updater):
@@ -151,20 +154,17 @@ def train_epoch(net, train_iter, loss, updater):
             updater.zero_grad()
             l.backward()
             updater.step()
-            metric.add(
-                float(l.sum()) * len(y),
-                num_correct(y_hat, y),
-                y.size().numel()
-            )
         else:
             l.sum().backward()
-            updater(net, X.shape[0])
-            metric.add(
-                float(l.sum()) * len(y),
-                num_correct(y_hat, y),
-                y.size().numel()
-            )
-        return metric[0] / metric[2], metric[1] / metric[2]
+            updater.step()
+        metric.add(
+            float(l.sum()),  # 损失函数的和
+            num_correct(y_hat, y),  # 正确的数量
+            y.numel()  # 总数量
+        )
+        loss_ave = metric[0] / metric[2]
+        accuracy_ave = metric[1] / metric[2]
+    return loss_ave, accuracy_ave
 
 
 def train(net, train_iter, test_iter, loss, num_epochs, updater):
@@ -177,29 +177,36 @@ def train(net, train_iter, test_iter, loss, num_epochs, updater):
         animator.add(epoch + 1, train_metrics + (test_acc,))
 
     train_loss, train_acc = train_metrics
-    assert train_loss < .5, train_loss
-    assert 1 >= train_acc > .7, train_acc
-    assert 1 >= test_acc > 0.7, test_acc
+    # assert train_loss < .5, train_loss
+    # assert 1 >= train_acc > .7, train_acc
+    # assert 1 >= test_acc > 0.7, test_acc
 
 
-def updater(net, batch_size):
-    return d2l.sgd([net.W, net.b], lr, batch_size)
+class Updator():
+    def __init__(self, net, batch_size, lr):
+        self.net = net
+        self.batch_size = batch_size
+        self.lr = lr
+
+    def step(self):
+        return d2l.sgd([self.net.W, self.net.b], self.lr, self.batch_size)
 
 
 def predict(net, test_iter, n=6):  # @save
     """预测标签"""
     for X, y in test_iter:
         break
-    trues = d2l.get_fashion_mnist_labels(y)
-    preds = d2l.get_fashion_mnist_labels(net.count(X).argmax(axis=1))
+    trues = get_fashion_mnist_labels(y)
+    preds = get_fashion_mnist_labels(net.count(X).argmax(axis=1))
     titles = [true + '\n' + pred for true, pred in zip(trues, preds)]
     d2l.show_images(
         X[0:n].reshape((n, 28, 28)), 1, n, titles=titles[0:n])
 
 
-if __name__ == '__main__':
-
+@profile
+def main():
     batch_size = 64
+    # 加载数据集
     train_iter, test_iter = loadFashionMnistData(batch_size)
 
     num_inputs = 784
@@ -209,9 +216,17 @@ if __name__ == '__main__':
     # 初始化权重
     W = torch.normal(0, .01, size=(num_inputs, num_outputs), requires_grad=True)
     b = torch.zeros(num_outputs, requires_grad=True)
-    num_epochs = 10
+
+    num_epochs = 3
     net = sm_net(W, b)
-    for X, y in train_iter:
-        net.count(X)
+    updater = Updator(net, batch_size, lr)
+    # 开始训练网络
     train(net, train_iter, test_iter, cross_entropy, num_epochs, updater)
+    # 预测
     predict(net, test_iter)
+    del train_iter
+    del test_iter
+
+
+if __name__ == '__main__':
+    main()
