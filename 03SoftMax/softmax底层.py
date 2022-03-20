@@ -6,6 +6,7 @@ from torch.utils import data
 from torchvision import transforms
 import d2l
 from Timer import Timer
+import IPython
 from IPython import display
 import pandas as pd
 
@@ -38,10 +39,13 @@ class sm_net:
         self.b = b
         self.count_times = 0
 
-    def count(self, X):
-        # self.count_times += 1
+    def forward(self, X):
+        self.count_times += 1
         # print(self.count_times)
         return softmax(torch.matmul(X.reshape(-1, self.W.shape[0]), self.W) + self.b)
+
+    def get_train_times(self):
+        return self.count_times
 
 
 class Animator:
@@ -76,11 +80,13 @@ class Animator:
         for x, y, fmt in zip(self.X, self.Y, self.fmts):
             self.axes[0].plot(x, y, fmt)
         self.config_axes()
-        display.display(self.fig)
-        display.clear_output(wait=True)
+        # display.display(self.fig)
+        # display.clear_output(wait=True)
 
 
 class Updator():
+    """Updator = trainer 训练器,指定使用什么损失函数"""
+
     def __init__(self, net, batch_size, lr):
         self.net = net
         self.batch_size = batch_size
@@ -92,8 +98,8 @@ class Updator():
 
 # @profile
 def loadFashionMnistData(batch_size, resize=None):
-    """
-    下载FashionMnist数据集并加载到内存中
+    """下载FashionMnist数据集并加载到内存中
+
     :param batch_size:
     :param resize:
     :return:返回训练集和测试集的DataLoader
@@ -108,9 +114,8 @@ def loadFashionMnistData(batch_size, resize=None):
     print("数据集加载成功", len(mnist_train), len(mnist_test))  # 60000 ,10000
 
     num_workers = 4  # 设置读取图片的进程数量 小于cpu的核心数
-    loader = (data.DataLoader(mnist_train, batch_size, shuffle=True, num_workers=num_workers),
-              data.DataLoader(mnist_test, batch_size, shuffle=True, num_workers=num_workers))
-    return loader
+    return (data.DataLoader(mnist_train, batch_size, shuffle=True, num_workers=num_workers),
+            data.DataLoader(mnist_test, batch_size, shuffle=True, num_workers=num_workers))
 
 
 def get_fashion_mnist_labels(labels):
@@ -133,7 +138,15 @@ def softmax(x):
 
 def cross_entropy(y_hat, y):
     """计算交叉熵"""
-    return -torch.log(y_hat[range(len(y_hat)), y])
+    # y_hat 64*10  y 64*1
+    # y中存放了真实的标签下标
+    # 计算交叉熵相当于对正确下标求-Log,越大越好
+    #
+    # test1 = y_hat[0, 1]
+    # test2 = y_hat[0][1]
+    x = y_hat[range(len(y_hat)), y]
+    #
+    return -torch.log(x)
 
 
 def num_correct(y_hat, y):
@@ -151,7 +164,7 @@ def net_accuracy(net, data_iter):
     metric = Accumulator(2)
     with torch.no_grad():
         for X, y in data_iter:
-            metric.add(num_correct(net.count(X), y), y.numel())
+            metric.add(num_correct(net.forward(X), y), y.numel())
     return float(metric[0]) * 100 / metric[1]
 
 
@@ -170,9 +183,9 @@ def get_params(net, W_path='./netParams/W.CSV', b_path='./netParams/b.CSV'):
 def train_epoch(net, train_iter, loss, updater):
     if isinstance(net, torch.nn.Module):
         net.train()  # 设置为训练模式
-    metric = Accumulator(3)
+    metric = Accumulator(3)  # 3个变量的累加器
     for X, y in train_iter:
-        y_hat = net.count(X)
+        y_hat = net.forward(X)
         l = loss(y_hat, y)
         if isinstance(updater, torch.optim.Optimizer):
             updater.zero_grad()
@@ -191,7 +204,7 @@ def train_epoch(net, train_iter, loss, updater):
     return loss_ave, accuracy_ave
 
 
-def train(net, train_iter, test_iter, loss, num_epochs, updater):
+def train(net, train_iter, test_iter, loss, num_epochs, updater, save=True):
     animator = Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[.3, .9],
                         legend=['train_loss', 'train_acc', 'test_acc'])
     for epoch in range(num_epochs):
@@ -199,8 +212,9 @@ def train(net, train_iter, test_iter, loss, num_epochs, updater):
         train_metrics = train_epoch(net, train_iter, loss, updater)
         test_acc = net_accuracy(net, test_iter)
         animator.add(epoch + 1, train_metrics + (test_acc,))
-    save_params(net)
-
+    if save:
+        save_params(net)
+    animator.fig.show()
     train_loss, train_acc = train_metrics
     # assert train_loss < .5, train_loss
     # assert 1 >= train_acc > .7, train_acc
@@ -212,7 +226,7 @@ def predict(net, test_iter, n=6):  # @save
     for X, y in test_iter:
         break
     trues = get_fashion_mnist_labels(y)
-    preds = get_fashion_mnist_labels(net.count(X).argmax(axis=1))
+    preds = get_fashion_mnist_labels(net.forward(X).argmax(axis=1))
     correct_preds = [true == pred for true, pred in zip(trues, preds)]
     # titles = [true + '\n' + pred for true, pred in zip(trues, preds)]
     data = np.vstack((np.array(trues), np.array(preds), np.array(correct_preds))).T
@@ -237,11 +251,11 @@ def main():
     W = torch.normal(0, .01, size=(num_inputs, num_outputs), requires_grad=True)
     b = torch.zeros(num_outputs, requires_grad=True)
 
-    num_epochs = 3
+    num_epochs = 1
     net = sm_net(W, b)
     updater = Updator(net, batch_size, lr)
     # 开始训练网络,训练的同时将参数保存到本地csv文件
-    # train(net, train_iter, test_iter, cross_entropy, num_epochs, updater)
+    train(net, train_iter, test_iter, cross_entropy, num_epochs, updater)
     # 预测
     net = get_params(net)
     predict(net, test_iter)
