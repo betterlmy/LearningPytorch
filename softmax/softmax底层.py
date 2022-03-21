@@ -169,8 +169,8 @@ def net_accuracy(net, data_iter):
 
 
 def save_params(net):
-    pd.DataFrame(net.W.detach().numpy()).to_csv('./netParams/W.CSV', index=False)  # 不保存列名
-    pd.DataFrame(net.b.detach().numpy()).to_csv('./netParams/b.CSV', index=False)  # 不保存列名
+    pd.DataFrame(net.W.detach().numpy()).to_csv('netParams/W.CSV', index=False)  # 不保存列名
+    pd.DataFrame(net.b.detach().numpy()).to_csv('netParams/b.CSV', index=False)  # 不保存列名
     print("写入成功")
 
 

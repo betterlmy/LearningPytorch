@@ -31,11 +31,13 @@ from torch.nn import functional as F
 from torch.utils import data
 from torchvision import transforms
 
+
 def use_svg_display():
     """使用svg格式在Jupyter中显示绘图
 
     Defined in :numref:`sec_calculus`"""
     display.set_matplotlib_formats('svg')
+
 
 def set_figsize(figsize=(3.5, 2.5)):
     """设置matplotlib的图表大小
@@ -43,6 +45,7 @@ def set_figsize(figsize=(3.5, 2.5)):
     Defined in :numref:`sec_calculus`"""
     use_svg_display()
     d2l.plt.rcParams['figure.figsize'] = figsize
+
 
 def set_axes(axes, xlabel, ylabel, xlim, ylim, xscale, yscale, legend):
     """设置matplotlib的轴
@@ -57,6 +60,7 @@ def set_axes(axes, xlabel, ylabel, xlim, ylim, xscale, yscale, legend):
     if legend:
         axes.legend(legend)
     axes.grid()
+
 
 def plot(X, Y=None, xlabel=None, ylabel=None, legend=None, xlim=None,
          ylim=None, xscale='linear', yscale='linear',
@@ -91,8 +95,10 @@ def plot(X, Y=None, xlabel=None, ylabel=None, legend=None, xlim=None,
             axes.plot(y, fmt)
     set_axes(axes, xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
 
+
 class Timer:
     """记录多次运行时间"""
+
     def __init__(self):
         """Defined in :numref:`subsec_linear_model`"""
         self.times = []
@@ -119,6 +125,7 @@ class Timer:
         """返回累计时间"""
         return np.array(self.times).cumsum().tolist()
 
+
 def synthetic_data(w, b, num_examples):
     """生成y=Xw+b+噪声
 
@@ -128,17 +135,20 @@ def synthetic_data(w, b, num_examples):
     y += d2l.normal(0, 0.01, y.shape)
     return X, d2l.reshape(y, (-1, 1))
 
+
 def linreg(X, w, b):
     """线性回归模型
 
     Defined in :numref:`sec_linear_scratch`"""
     return d2l.matmul(X, w) + b
 
+
 def squared_loss(y_hat, y):
     """均方损失
 
     Defined in :numref:`sec_linear_scratch`"""
     return (y_hat - d2l.reshape(y, y_hat.shape)) ** 2 / 2
+
 
 def sgd(params, lr, batch_size):
     """小批量随机梯度下降
@@ -149,12 +159,14 @@ def sgd(params, lr, batch_size):
             param -= lr * param.grad / batch_size
             param.grad.zero_()
 
+
 def load_array(data_arrays, batch_size, is_train=True):
     """构造一个PyTorch数据迭代器
 
     Defined in :numref:`sec_linear_concise`"""
     dataset = data.TensorDataset(*data_arrays)
     return data.DataLoader(dataset, batch_size, shuffle=is_train)
+
 
 def get_fashion_mnist_labels(labels):
     """返回Fashion-MNIST数据集的文本标签
@@ -163,6 +175,7 @@ def get_fashion_mnist_labels(labels):
     text_labels = ['t-shirt', 'trouser', 'pullover', 'dress', 'coat',
                    'sandal', 'shirt', 'sneaker', 'bag', 'ankle boot']
     return [text_labels[int(i)] for i in labels]
+
 
 def show_images(imgs, num_rows, num_cols, titles=None, scale=1.5):
     """绘制图像列表
@@ -184,11 +197,13 @@ def show_images(imgs, num_rows, num_cols, titles=None, scale=1.5):
             ax.set_title(titles[i])
     return axes
 
+
 def get_dataloader_workers():
     """使用4个进程来读取数据
 
     Defined in :numref:`sec_fashion_mnist`"""
     return 4
+
 
 def load_data_fashion_mnist(batch_size, resize=None):
     """下载Fashion-MNIST数据集，然后将其加载到内存中
@@ -199,13 +214,14 @@ def load_data_fashion_mnist(batch_size, resize=None):
         trans.insert(0, transforms.Resize(resize))
     trans = transforms.Compose(trans)
     mnist_train = torchvision.datasets.FashionMNIST(
-        root="../data", train=True, transform=trans, download=True)
+        root="../03SoftMax/data", train=True, transform=trans, download=False)
     mnist_test = torchvision.datasets.FashionMNIST(
-        root="../data", train=False, transform=trans, download=True)
+        root="../03SoftMax/data", train=False, transform=trans, download=False)
     return (data.DataLoader(mnist_train, batch_size, shuffle=True,
                             num_workers=get_dataloader_workers()),
             data.DataLoader(mnist_test, batch_size, shuffle=False,
                             num_workers=get_dataloader_workers()))
+
 
 def accuracy(y_hat, y):
     """计算预测正确的数量
@@ -215,6 +231,7 @@ def accuracy(y_hat, y):
         y_hat = d2l.argmax(y_hat, axis=1)
     cmp = d2l.astype(y_hat, y.dtype) == y
     return float(d2l.reduce_sum(d2l.astype(cmp, y.dtype)))
+
 
 def evaluate_accuracy(net, data_iter):
     """计算在指定数据集上模型的精度
@@ -228,8 +245,10 @@ def evaluate_accuracy(net, data_iter):
             metric.add(accuracy(net(X), y), d2l.size(y))
     return metric[0] / metric[1]
 
+
 class Accumulator:
     """在n个变量上累加"""
+
     def __init__(self, n):
         """Defined in :numref:`sec_softmax_scratch`"""
         self.data = [0.0] * n
@@ -242,6 +261,7 @@ class Accumulator:
 
     def __getitem__(self, idx):
         return self.data[idx]
+
 
 def train_epoch_ch3(net, train_iter, loss, updater):
     """训练模型一个迭代周期（定义见第3章）
@@ -269,8 +289,10 @@ def train_epoch_ch3(net, train_iter, loss, updater):
     # 返回训练损失和训练精度
     return metric[0] / metric[2], metric[1] / metric[2]
 
+
 class Animator:
     """在动画中绘制数据"""
+
     def __init__(self, xlabel=None, ylabel=None, legend=None, xlim=None,
                  ylim=None, xscale='linear', yscale='linear',
                  fmts=('-', 'm--', 'g-.', 'r:'), nrows=1, ncols=1,
@@ -310,6 +332,7 @@ class Animator:
         display.display(self.fig)
         display.clear_output(wait=True)
 
+
 def train_ch3(net, train_iter, test_iter, loss, num_epochs, updater):
     """训练模型（定义见第3章）
 
@@ -325,6 +348,7 @@ def train_ch3(net, train_iter, test_iter, loss, num_epochs, updater):
     assert train_acc <= 1 and train_acc > 0.7, train_acc
     assert test_acc <= 1 and test_acc > 0.7, test_acc
 
+
 def predict_ch3(net, test_iter, n=6):
     """预测标签（定义见第3章）
 
@@ -333,9 +357,10 @@ def predict_ch3(net, test_iter, n=6):
         break
     trues = d2l.get_fashion_mnist_labels(y)
     preds = d2l.get_fashion_mnist_labels(d2l.argmax(net(X), axis=1))
-    titles = [true +'\n' + pred for true, pred in zip(trues, preds)]
+    titles = [true + '\n' + pred for true, pred in zip(trues, preds)]
     d2l.show_images(
         d2l.reshape(X[0:n], (n, 28, 28)), 1, n, titles=titles[0:n])
+
 
 def evaluate_loss(net, data_iter, loss):
     """评估给定数据集上模型的损失
@@ -349,8 +374,10 @@ def evaluate_loss(net, data_iter, loss):
         metric.add(d2l.reduce_sum(l), d2l.size(l))
     return metric[0] / metric[1]
 
+
 DATA_HUB = dict()
 DATA_URL = 'http://d2l-data.s3-accelerate.amazonaws.com/'
+
 
 def download(name, cache_dir=os.path.join('..', 'data')):
     """下载一个DATA_HUB中的文件，返回本地文件名
@@ -376,6 +403,7 @@ def download(name, cache_dir=os.path.join('..', 'data')):
         f.write(r.content)
     return fname
 
+
 def download_extract(name, folder=None):
     """下载并解压zip/tar文件
 
@@ -392,12 +420,14 @@ def download_extract(name, folder=None):
     fp.extractall(base_dir)
     return os.path.join(base_dir, folder) if folder else data_dir
 
+
 def download_all():
     """下载DATA_HUB中的所有文件
 
     Defined in :numref:`sec_kaggle_house`"""
     for name in DATA_HUB:
         download(name)
+
 
 DATA_HUB['kaggle_house_train'] = (
     DATA_URL + 'kaggle_house_pred_train.csv',
@@ -407,6 +437,7 @@ DATA_HUB['kaggle_house_test'] = (
     DATA_URL + 'kaggle_house_pred_test.csv',
     'fa19780a7b011d9b009e8bff8e99922a8ee2eb90')
 
+
 def try_gpu(i=0):
     """如果存在，则返回gpu(i)，否则返回cpu()
 
@@ -415,13 +446,15 @@ def try_gpu(i=0):
         return torch.device(f'cuda:{i}')
     return torch.device('cpu')
 
+
 def try_all_gpus():
     """返回所有可用的GPU，如果没有GPU，则返回[cpu(),]
 
     Defined in :numref:`sec_use_gpu`"""
     devices = [torch.device(f'cuda:{i}')
-             for i in range(torch.cuda.device_count())]
+               for i in range(torch.cuda.device_count())]
     return devices if devices else [torch.device('cpu')]
+
 
 def corr2d(X, K):
     """计算二维互相关运算
@@ -433,6 +466,7 @@ def corr2d(X, K):
         for j in range(Y.shape[1]):
             Y[i, j] = d2l.reduce_sum((X[i: i + h, j: j + w] * K))
     return Y
+
 
 def evaluate_accuracy_gpu(net, data_iter, device=None):
     """使用GPU计算模型在数据集上的精度
@@ -455,13 +489,16 @@ def evaluate_accuracy_gpu(net, data_iter, device=None):
             metric.add(d2l.accuracy(net(X), y), d2l.size(y))
     return metric[0] / metric[1]
 
+
 def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
     """用GPU训练模型(在第六章定义)
 
     Defined in :numref:`sec_lenet`"""
+
     def init_weights(m):
         if type(m) == nn.Linear or type(m) == nn.Conv2d:
             nn.init.xavier_uniform_(m.weight)
+
     net.apply(init_weights)
     print('training on', device)
     net.to(device)
@@ -497,6 +534,7 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
     print(f'{metric[2] * num_epochs / timer.sum():.1f} examples/sec '
           f'on {str(device)}')
 
+
 class Residual(nn.Module):
     def __init__(self, input_channels, num_channels,
                  use_1x1conv=False, strides=1):
@@ -521,8 +559,10 @@ class Residual(nn.Module):
         Y += X
         return F.relu(Y)
 
+
 d2l.DATA_HUB['time_machine'] = (d2l.DATA_URL + 'timemachine.txt',
                                 '090b5e7e70c295757f55df93cb0a180b9691891a')
+
 
 def read_time_machine():
     """将时间机器数据集加载到文本行的列表中
@@ -531,6 +571,7 @@ def read_time_machine():
     with open(d2l.download('time_machine'), 'r') as f:
         lines = f.readlines()
     return [re.sub('[^A-Za-z]+', ' ', line).strip().lower() for line in lines]
+
 
 def tokenize(lines, token='word'):
     """将文本行拆分为单词或字符词元
@@ -543,8 +584,10 @@ def tokenize(lines, token='word'):
     else:
         print('错误：未知词元类型：' + token)
 
+
 class Vocab:
     """文本词表"""
+
     def __init__(self, tokens=None, min_freq=0, reserved_tokens=None):
         """Defined in :numref:`sec_text_preprocessing`"""
         if tokens is None:
@@ -587,6 +630,7 @@ class Vocab:
     def token_freqs(self):
         return self._token_freqs
 
+
 def count_corpus(tokens):
     """统计词元的频率
 
@@ -596,6 +640,7 @@ def count_corpus(tokens):
         # 将词元列表展平成一个列表
         tokens = [token for line in tokens for token in line]
     return collections.Counter(tokens)
+
 
 def load_corpus_time_machine(max_tokens=-1):
     """返回时光机器数据集的词元索引列表和词表
@@ -610,6 +655,7 @@ def load_corpus_time_machine(max_tokens=-1):
     if max_tokens > 0:
         corpus = corpus[:max_tokens]
     return corpus, vocab
+
 
 def seq_data_iter_random(corpus, batch_size, num_steps):
     """使用随机抽样生成一个小批量子序列
@@ -637,6 +683,7 @@ def seq_data_iter_random(corpus, batch_size, num_steps):
         Y = [data(j + 1) for j in initial_indices_per_batch]
         yield d2l.tensor(X), d2l.tensor(Y)
 
+
 def seq_data_iter_sequential(corpus, batch_size, num_steps):
     """使用顺序分区生成一个小批量子序列
 
@@ -653,8 +700,10 @@ def seq_data_iter_sequential(corpus, batch_size, num_steps):
         Y = Ys[:, i: i + num_steps]
         yield X, Y
 
+
 class SeqDataLoader:
     """加载序列数据的迭代器"""
+
     def __init__(self, batch_size, num_steps, use_random_iter, max_tokens):
         """Defined in :numref:`sec_language_model`"""
         if use_random_iter:
@@ -667,6 +716,7 @@ class SeqDataLoader:
     def __iter__(self):
         return self.data_iter_fn(self.corpus, self.batch_size, self.num_steps)
 
+
 def load_data_time_machine(batch_size, num_steps,
                            use_random_iter=False, max_tokens=10000):
     """返回时光机器数据集的迭代器和词表
@@ -676,8 +726,10 @@ def load_data_time_machine(batch_size, num_steps,
         batch_size, num_steps, use_random_iter, max_tokens)
     return data_iter, data_iter.vocab
 
+
 class RNNModelScratch:
     """从零开始实现的循环神经网络模型"""
+
     def __init__(self, vocab_size, num_hiddens, device,
                  get_params, init_state, forward_fn):
         """Defined in :numref:`sec_rnn_scratch`"""
@@ -691,6 +743,7 @@ class RNNModelScratch:
 
     def begin_state(self, batch_size, device):
         return self.init_state(batch_size, self.num_hiddens, device)
+
 
 def predict_ch8(prefix, num_preds, net, vocab, device):
     """在prefix后面生成新字符
@@ -708,6 +761,7 @@ def predict_ch8(prefix, num_preds, net, vocab, device):
         outputs.append(int(y.argmax(dim=1).reshape(1)))
     return ''.join([vocab.idx_to_token[i] for i in outputs])
 
+
 def grad_clipping(net, theta):
     """裁剪梯度
 
@@ -720,6 +774,7 @@ def grad_clipping(net, theta):
     if norm > theta:
         for param in params:
             param.grad[:] *= theta / norm
+
 
 def train_epoch_ch8(net, train_iter, loss, updater, device, use_random_iter):
     """训练网络一个迭代周期（定义见第8章）
@@ -756,6 +811,7 @@ def train_epoch_ch8(net, train_iter, loss, updater, device, use_random_iter):
         metric.add(l * d2l.size(y), d2l.size(y))
     return math.exp(metric[0] / metric[1]), metric[1] / timer.stop()
 
+
 def train_ch8(net, train_iter, vocab, lr, num_epochs, device,
               use_random_iter=False):
     """训练模型（定义见第8章）
@@ -781,10 +837,12 @@ def train_ch8(net, train_iter, vocab, lr, num_epochs, device,
     print(predict('time traveller'))
     print(predict('traveller'))
 
+
 class RNNModel(nn.Module):
     """循环神经网络模型
 
     Defined in :numref:`sec_rnn-concise`"""
+
     def __init__(self, rnn_layer, vocab_size, **kwargs):
         super(RNNModel, self).__init__(**kwargs)
         self.rnn = rnn_layer
@@ -810,9 +868,9 @@ class RNNModel(nn.Module):
     def begin_state(self, device, batch_size=1):
         if not isinstance(self.rnn, nn.LSTM):
             # nn.GRU以张量作为隐状态
-            return  torch.zeros((self.num_directions * self.rnn.num_layers,
-                                 batch_size, self.num_hiddens),
-                                device=device)
+            return torch.zeros((self.num_directions * self.rnn.num_layers,
+                                batch_size, self.num_hiddens),
+                               device=device)
         else:
             # nn.LSTM以元组作为隐状态
             return (torch.zeros((
@@ -822,8 +880,10 @@ class RNNModel(nn.Module):
                         self.num_directions * self.rnn.num_layers,
                         batch_size, self.num_hiddens), device=device))
 
+
 d2l.DATA_HUB['fra-eng'] = (d2l.DATA_URL + 'fra-eng.zip',
                            '94646ad1522d915e7b0f9296181140edcf86a4f5')
+
 
 def read_data_nmt():
     """载入“英语－法语”数据集
@@ -831,13 +891,15 @@ def read_data_nmt():
     Defined in :numref:`sec_machine_translation`"""
     data_dir = d2l.download_extract('fra-eng')
     with open(os.path.join(data_dir, 'fra.txt'), 'r',
-             encoding='utf-8') as f:
+              encoding='utf-8') as f:
         return f.read()
+
 
 def preprocess_nmt(text):
     """预处理“英语－法语”数据集
 
     Defined in :numref:`sec_machine_translation`"""
+
     def no_space(char, prev_char):
         return char in set(',.!?') and prev_char != ' '
 
@@ -848,6 +910,7 @@ def preprocess_nmt(text):
     out = [' ' + char if i > 0 and no_space(char, text[i - 1]) else char
            for i, char in enumerate(text)]
     return ''.join(out)
+
 
 def tokenize_nmt(text, num_examples=None):
     """词元化“英语－法语”数据数据集
@@ -863,6 +926,7 @@ def tokenize_nmt(text, num_examples=None):
             target.append(parts[1].split(' '))
     return source, target
 
+
 def truncate_pad(line, num_steps, padding_token):
     """截断或填充文本序列
 
@@ -870,6 +934,7 @@ def truncate_pad(line, num_steps, padding_token):
     if len(line) > num_steps:
         return line[:num_steps]  # 截断
     return line + [padding_token] * (num_steps - len(line))  # 填充
+
 
 def build_array_nmt(lines, vocab, num_steps):
     """将机器翻译的文本序列转换成小批量
@@ -882,6 +947,7 @@ def build_array_nmt(lines, vocab, num_steps):
     valid_len = d2l.reduce_sum(
         d2l.astype(array != vocab['<pad>'], d2l.int32), 1)
     return array, valid_len
+
 
 def load_data_nmt(batch_size, num_steps, num_examples=600):
     """返回翻译数据集的迭代器和词表
@@ -899,18 +965,22 @@ def load_data_nmt(batch_size, num_steps, num_examples=600):
     data_iter = d2l.load_array(data_arrays, batch_size)
     return data_iter, src_vocab, tgt_vocab
 
+
 class Encoder(nn.Module):
     """编码器-解码器架构的基本编码器接口"""
+
     def __init__(self, **kwargs):
         super(Encoder, self).__init__(**kwargs)
 
     def forward(self, X, *args):
         raise NotImplementedError
 
+
 class Decoder(nn.Module):
     """编码器-解码器架构的基本解码器接口
 
     Defined in :numref:`sec_encoder-decoder`"""
+
     def __init__(self, **kwargs):
         super(Decoder, self).__init__(**kwargs)
 
@@ -920,10 +990,12 @@ class Decoder(nn.Module):
     def forward(self, X, state):
         raise NotImplementedError
 
+
 class EncoderDecoder(nn.Module):
     """编码器-解码器架构的基类
 
     Defined in :numref:`sec_encoder-decoder`"""
+
     def __init__(self, encoder, decoder, **kwargs):
         super(EncoderDecoder, self).__init__(**kwargs)
         self.encoder = encoder
@@ -934,10 +1006,12 @@ class EncoderDecoder(nn.Module):
         dec_state = self.decoder.init_state(enc_outputs, *args)
         return self.decoder(dec_X, dec_state)
 
+
 class Seq2SeqEncoder(d2l.Encoder):
     """用于序列到序列学习的循环神经网络编码器
 
     Defined in :numref:`sec_seq2seq`"""
+
     def __init__(self, vocab_size, embed_size, num_hiddens, num_layers,
                  dropout=0, **kwargs):
         super(Seq2SeqEncoder, self).__init__(**kwargs)
@@ -957,6 +1031,7 @@ class Seq2SeqEncoder(d2l.Encoder):
         # state[0]的形状:(num_layers,batch_size,num_hiddens)
         return output, state
 
+
 def sequence_mask(X, valid_len, value=0):
     """在序列中屏蔽不相关的项
 
@@ -967,26 +1042,30 @@ def sequence_mask(X, valid_len, value=0):
     X[~mask] = value
     return X
 
+
 class MaskedSoftmaxCELoss(nn.CrossEntropyLoss):
     """带遮蔽的softmax交叉熵损失函数
 
     Defined in :numref:`sec_seq2seq_decoder`"""
+
     # pred的形状：(batch_size,num_steps,vocab_size)
     # label的形状：(batch_size,num_steps)
     # valid_len的形状：(batch_size,)
     def forward(self, pred, label, valid_len):
         weights = torch.ones_like(label)
         weights = sequence_mask(weights, valid_len)
-        self.reduction='none'
+        self.reduction = 'none'
         unweighted_loss = super(MaskedSoftmaxCELoss, self).forward(
             pred.permute(0, 2, 1), label)
         weighted_loss = (unweighted_loss * weights).mean(dim=1)
         return weighted_loss
 
+
 def train_seq2seq(net, data_iter, lr, num_epochs, tgt_vocab, device):
     """训练序列到序列模型
 
     Defined in :numref:`sec_seq2seq_decoder`"""
+
     def xavier_init_weights(m):
         if type(m) == nn.Linear:
             nn.init.xavier_uniform_(m.weight)
@@ -1001,7 +1080,7 @@ def train_seq2seq(net, data_iter, lr, num_epochs, tgt_vocab, device):
     loss = MaskedSoftmaxCELoss()
     net.train()
     animator = d2l.Animator(xlabel='epoch', ylabel='loss',
-                     xlim=[10, num_epochs])
+                            xlim=[10, num_epochs])
     for epoch in range(num_epochs):
         timer = d2l.Timer()
         metric = d2l.Accumulator(2)  # 训练损失总和，词元数量
@@ -1009,11 +1088,11 @@ def train_seq2seq(net, data_iter, lr, num_epochs, tgt_vocab, device):
             optimizer.zero_grad()
             X, X_valid_len, Y, Y_valid_len = [x.to(device) for x in batch]
             bos = torch.tensor([tgt_vocab['<bos>']] * Y.shape[0],
-                          device=device).reshape(-1, 1)
+                               device=device).reshape(-1, 1)
             dec_input = torch.cat([bos, Y[:, :-1]], 1)  # 强制教学
             Y_hat, _ = net(X, dec_input, X_valid_len)
             l = loss(Y_hat, Y, Y_valid_len)
-            l.sum().backward()	# 损失函数的标量进行“反向传播”
+            l.sum().backward()  # 损失函数的标量进行“反向传播”
             d2l.grad_clipping(net, 1)
             num_tokens = Y_valid_len.sum()
             optimizer.step()
@@ -1022,7 +1101,8 @@ def train_seq2seq(net, data_iter, lr, num_epochs, tgt_vocab, device):
         if (epoch + 1) % 10 == 0:
             animator.add(epoch + 1, (metric[0] / metric[1],))
     print(f'loss {metric[0] / metric[1]:.3f}, {metric[1] / timer.stop():.1f} '
-        f'tokens/sec on {str(device)}')
+          f'tokens/sec on {str(device)}')
+
 
 def predict_seq2seq(net, src_sentence, src_vocab, tgt_vocab, num_steps,
                     device, save_attention_weights=False):
@@ -1058,6 +1138,7 @@ def predict_seq2seq(net, src_sentence, src_vocab, tgt_vocab, num_steps,
         output_seq.append(pred)
     return ' '.join(tgt_vocab.to_tokens(output_seq)), attention_weight_seq
 
+
 def bleu(pred_seq, label_seq, k):
     """计算BLEU
 
@@ -1075,6 +1156,7 @@ def bleu(pred_seq, label_seq, k):
                 label_subs[' '.join(pred_tokens[i: i + n])] -= 1
         score *= math.pow(num_matches / (len_pred - n + 1), math.pow(0.5, n))
     return score
+
 
 def show_heatmaps(matrices, xlabel, ylabel, titles=None, figsize=(2.5, 2.5),
                   cmap='Reds'):
@@ -1096,6 +1178,7 @@ def show_heatmaps(matrices, xlabel, ylabel, titles=None, figsize=(2.5, 2.5),
                 ax.set_title(titles[j])
     fig.colorbar(pcm, ax=axes, shrink=0.6);
 
+
 def masked_softmax(X, valid_lens):
     """通过在最后一个轴上掩蔽元素来执行softmax操作
 
@@ -1114,10 +1197,12 @@ def masked_softmax(X, valid_lens):
                               value=-1e6)
         return nn.functional.softmax(X.reshape(shape), dim=-1)
 
+
 class AdditiveAttention(nn.Module):
     """加性注意力
 
     Defined in :numref:`sec_attention-scoring-functions`"""
+
     def __init__(self, key_size, query_size, num_hiddens, dropout, **kwargs):
         super(AdditiveAttention, self).__init__(**kwargs)
         self.W_k = nn.Linear(key_size, num_hiddens, bias=False)
@@ -1140,10 +1225,12 @@ class AdditiveAttention(nn.Module):
         # values的形状：(batch_size，“键－值”对的个数，值的维度)
         return torch.bmm(self.dropout(self.attention_weights), values)
 
+
 class DotProductAttention(nn.Module):
     """缩放点积注意力
 
     Defined in :numref:`subsec_additive-attention`"""
+
     def __init__(self, dropout, **kwargs):
         super(DotProductAttention, self).__init__(**kwargs)
         self.dropout = nn.Dropout(dropout)
@@ -1155,14 +1242,16 @@ class DotProductAttention(nn.Module):
     def forward(self, queries, keys, values, valid_lens=None):
         d = queries.shape[-1]
         # 设置transpose_b=True为了交换keys的最后两个维度
-        scores = torch.bmm(queries, keys.transpose(1,2)) / math.sqrt(d)
+        scores = torch.bmm(queries, keys.transpose(1, 2)) / math.sqrt(d)
         self.attention_weights = masked_softmax(scores, valid_lens)
         return torch.bmm(self.dropout(self.attention_weights), values)
+
 
 class AttentionDecoder(d2l.Decoder):
     """带有注意力机制解码器的基本接口
 
     Defined in :numref:`sec_seq2seq_attention`"""
+
     def __init__(self, **kwargs):
         super(AttentionDecoder, self).__init__(**kwargs)
 
@@ -1170,10 +1259,12 @@ class AttentionDecoder(d2l.Decoder):
     def attention_weights(self):
         raise NotImplementedError
 
+
 class MultiHeadAttention(nn.Module):
     """多头注意力
 
     Defined in :numref:`sec_multihead-attention`"""
+
     def __init__(self, key_size, query_size, value_size, num_hiddens,
                  num_heads, dropout, bias=False, **kwargs):
         super(MultiHeadAttention, self).__init__(**kwargs)
@@ -1210,6 +1301,7 @@ class MultiHeadAttention(nn.Module):
         output_concat = transpose_output(output, self.num_heads)
         return self.W_o(output_concat)
 
+
 def transpose_qkv(X, num_heads):
     """为了多注意力头的并行计算而变换形状
 
@@ -1236,10 +1328,12 @@ def transpose_output(X, num_heads):
     X = X.permute(0, 2, 1, 3)
     return X.reshape(X.shape[0], X.shape[1], -1)
 
+
 class PositionalEncoding(nn.Module):
     """位置编码
 
     Defined in :numref:`sec_self-attention-and-positional-encoding`"""
+
     def __init__(self, num_hiddens, dropout, max_len=1000):
         super(PositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(dropout)
@@ -1255,10 +1349,12 @@ class PositionalEncoding(nn.Module):
         X = X + self.P[:, :X.shape[1], :].to(X.device)
         return self.dropout(X)
 
+
 class PositionWiseFFN(nn.Module):
     """基于位置的前馈网络
 
     Defined in :numref:`sec_transformer`"""
+
     def __init__(self, ffn_num_input, ffn_num_hiddens, ffn_num_outputs,
                  **kwargs):
         super(PositionWiseFFN, self).__init__(**kwargs)
@@ -1269,10 +1365,12 @@ class PositionWiseFFN(nn.Module):
     def forward(self, X):
         return self.dense2(self.relu(self.dense1(X)))
 
+
 class AddNorm(nn.Module):
     """残差连接后进行层规范化
 
     Defined in :numref:`sec_transformer`"""
+
     def __init__(self, normalized_shape, dropout, **kwargs):
         super(AddNorm, self).__init__(**kwargs)
         self.dropout = nn.Dropout(dropout)
@@ -1281,10 +1379,12 @@ class AddNorm(nn.Module):
     def forward(self, X, Y):
         return self.ln(self.dropout(Y) + X)
 
+
 class EncoderBlock(nn.Module):
     """transformer编码器块
 
     Defined in :numref:`sec_transformer`"""
+
     def __init__(self, key_size, query_size, value_size, num_hiddens,
                  norm_shape, ffn_num_input, ffn_num_hiddens, num_heads,
                  dropout, use_bias=False, **kwargs):
@@ -1301,10 +1401,12 @@ class EncoderBlock(nn.Module):
         Y = self.addnorm1(X, self.attention(X, X, X, valid_lens))
         return self.addnorm2(Y, self.ffn(Y))
 
+
 class TransformerEncoder(d2l.Encoder):
     """transformer编码器
 
     Defined in :numref:`sec_transformer`"""
+
     def __init__(self, vocab_size, key_size, query_size, value_size,
                  num_hiddens, norm_shape, ffn_num_input, ffn_num_hiddens,
                  num_heads, num_layers, dropout, use_bias=False, **kwargs):
@@ -1314,10 +1416,10 @@ class TransformerEncoder(d2l.Encoder):
         self.pos_encoding = d2l.PositionalEncoding(num_hiddens, dropout)
         self.blks = nn.Sequential()
         for i in range(num_layers):
-            self.blks.add_module("block"+str(i),
-                EncoderBlock(key_size, query_size, value_size, num_hiddens,
-                             norm_shape, ffn_num_input, ffn_num_hiddens,
-                             num_heads, dropout, use_bias))
+            self.blks.add_module("block" + str(i),
+                                 EncoderBlock(key_size, query_size, value_size, num_hiddens,
+                                              norm_shape, ffn_num_input, ffn_num_hiddens,
+                                              num_heads, dropout, use_bias))
 
     def forward(self, X, valid_lens, *args):
         # 因为位置编码值在-1和1之间，
@@ -1331,9 +1433,11 @@ class TransformerEncoder(d2l.Encoder):
                 i] = blk.attention.attention.attention_weights
         return X
 
+
 def annotate(text, xy, xytext):
     d2l.plt.gca().annotate(text, xy=xy, xytext=xytext,
                            arrowprops=dict(arrowstyle='->'))
+
 
 def train_2d(trainer, steps=20, f_grad=None):
     """用定制的训练机优化2D目标函数
@@ -1351,6 +1455,7 @@ def train_2d(trainer, steps=20, f_grad=None):
     print(f'epoch {i + 1}, x1: {float(x1):f}, x2: {float(x2):f}')
     return results
 
+
 def show_trace_2d(f, results):
     """显示优化过程中2D变量的轨迹
 
@@ -1363,8 +1468,10 @@ def show_trace_2d(f, results):
     d2l.plt.xlabel('x1')
     d2l.plt.ylabel('x2')
 
+
 d2l.DATA_HUB['airfoil'] = (d2l.DATA_URL + 'airfoil_self_noise.dat',
                            '76e5be1548fd8222e5074cf0faae75edff8cf93f')
+
 
 def get_data_ch11(batch_size=10, n=1500):
     """Defined in :numref:`sec_minibatches`"""
@@ -1373,7 +1480,8 @@ def get_data_ch11(batch_size=10, n=1500):
     data = torch.from_numpy((data - data.mean(axis=0)) / data.std(axis=0))
     data_iter = d2l.load_array((data[:n, :-1], data[:n, -1]),
                                batch_size, is_train=True)
-    return data_iter, data.shape[1]-1
+    return data_iter, data.shape[1] - 1
+
 
 def train_ch11(trainer_fn, states, hyperparams, data_iter,
                feature_dim, num_epochs=2):
@@ -1395,19 +1503,22 @@ def train_ch11(trainer_fn, states, hyperparams, data_iter,
             n += X.shape[0]
             if n % 200 == 0:
                 timer.stop()
-                animator.add(n/X.shape[0]/len(data_iter),
+                animator.add(n / X.shape[0] / len(data_iter),
                              (d2l.evaluate_loss(net, data_iter, loss),))
                 timer.start()
     print(f'loss: {animator.Y[0][-1]:.3f}, {timer.avg():.3f} sec/epoch')
     return timer.cumsum(), animator.Y[0]
 
+
 def train_concise_ch11(trainer_fn, hyperparams, data_iter, num_epochs=4):
     """Defined in :numref:`sec_minibatches`"""
     # 初始化模型
     net = nn.Sequential(nn.Linear(5, 1))
+
     def init_weights(m):
         if type(m) == nn.Linear:
             torch.nn.init.normal_(m.weight, std=0.01)
+
     net.apply(init_weights)
 
     optimizer = trainer_fn(net.parameters(), **hyperparams)
@@ -1427,13 +1538,15 @@ def train_concise_ch11(trainer_fn, hyperparams, data_iter, num_epochs=4):
             if n % 200 == 0:
                 timer.stop()
                 # MSELoss计算平方误差时不带系数1/2
-                animator.add(n/X.shape[0]/len(data_iter),
+                animator.add(n / X.shape[0] / len(data_iter),
                              (d2l.evaluate_loss(net, data_iter, loss) / 2,))
                 timer.start()
     print(f'loss: {animator.Y[0][-1]:.3f}, {timer.avg():.3f} sec/epoch')
 
+
 class Benchmark:
     """用于测量运行时间"""
+
     def __init__(self, description='Done'):
         """Defined in :numref:`sec_hybridize`"""
         self.description = description
@@ -1445,6 +1558,7 @@ class Benchmark:
     def __exit__(self, *args):
         print(f'{self.description}: {self.timer.stop():.4f} sec')
 
+
 def split_batch(X, y, devices):
     """将X和y拆分到多个设备上
 
@@ -1453,10 +1567,12 @@ def split_batch(X, y, devices):
     return (nn.parallel.scatter(X, devices),
             nn.parallel.scatter(y, devices))
 
+
 def resnet18(num_classes, in_channels=1):
     """稍加修改的ResNet-18模型
 
     Defined in :numref:`sec_multi_gpu_concise`"""
+
     def resnet_block(in_channels, out_channels, num_residuals,
                      first_block=False):
         blk = []
@@ -1478,10 +1594,11 @@ def resnet18(num_classes, in_channels=1):
     net.add_module("resnet_block2", resnet_block(64, 128, 2))
     net.add_module("resnet_block3", resnet_block(128, 256, 2))
     net.add_module("resnet_block4", resnet_block(256, 512, 2))
-    net.add_module("global_avg_pool", nn.AdaptiveAvgPool2d((1,1)))
+    net.add_module("global_avg_pool", nn.AdaptiveAvgPool2d((1, 1)))
     net.add_module("fc", nn.Sequential(nn.Flatten(),
                                        nn.Linear(512, num_classes)))
     return net
+
 
 def train_batch_ch13(net, X, y, loss, trainer, devices):
     """用多GPU进行小批量训练
@@ -1502,6 +1619,7 @@ def train_batch_ch13(net, X, y, loss, trainer, devices):
     train_loss_sum = l.sum()
     train_acc_sum = d2l.accuracy(pred, y)
     return train_loss_sum, train_acc_sum
+
 
 def train_ch13(net, train_iter, test_iter, loss, trainer, num_epochs,
                devices=d2l.try_all_gpus()):
@@ -1532,8 +1650,10 @@ def train_ch13(net, train_iter, test_iter, loss, trainer, num_epochs,
     print(f'{metric[2] * num_epochs / timer.sum():.1f} examples/sec on '
           f'{str(devices)}')
 
+
 d2l.DATA_HUB['hotdog'] = (d2l.DATA_URL + 'hotdog.zip',
-                         'fba480ffa8aa7e0febbb511d181409f899b9baa5')
+                          'fba480ffa8aa7e0febbb511d181409f899b9baa5')
+
 
 def box_corner_to_center(boxes):
     """从（左上，右下）转换到（中间，宽度，高度）
@@ -1547,6 +1667,7 @@ def box_corner_to_center(boxes):
     boxes = d2l.stack((cx, cy, w, h), axis=-1)
     return boxes
 
+
 def box_center_to_corner(boxes):
     """从（中间，宽度，高度）转换到（左上，右下）
 
@@ -1559,13 +1680,15 @@ def box_center_to_corner(boxes):
     boxes = d2l.stack((x1, y1, x2, y2), axis=-1)
     return boxes
 
+
 def bbox_to_rect(bbox, color):
     """Defined in :numref:`sec_bbox`"""
     # 将边界框(左上x,左上y,右下x,右下y)格式转换成matplotlib格式：
     # ((左上x,左上y),宽,高)
     return d2l.plt.Rectangle(
-        xy=(bbox[0], bbox[1]), width=bbox[2]-bbox[0], height=bbox[3]-bbox[1],
+        xy=(bbox[0], bbox[1]), width=bbox[2] - bbox[0], height=bbox[3] - bbox[1],
         fill=False, edgecolor=color, linewidth=2)
+
 
 def multibox_prior(data, sizes, ratios):
     """生成以每个像素为中心具有不同形状的锚框
@@ -1592,25 +1715,27 @@ def multibox_prior(data, sizes, ratios):
     # 生成“boxes_per_pixel”个高和宽，
     # 之后用于创建锚框的四角坐标(xmin,xmax,ymin,ymax)
     w = torch.cat((size_tensor * torch.sqrt(ratio_tensor[0]),
-                   sizes[0] * torch.sqrt(ratio_tensor[1:])))\
-                   * in_height / in_width  # 处理矩形输入
+                   sizes[0] * torch.sqrt(ratio_tensor[1:]))) \
+        * in_height / in_width  # 处理矩形输入
     h = torch.cat((size_tensor / torch.sqrt(ratio_tensor[0]),
                    sizes[0] / torch.sqrt(ratio_tensor[1:])))
     # 除以2来获得半高和半宽
     anchor_manipulations = torch.stack((-w, -h, w, h)).T.repeat(
-                                        in_height * in_width, 1) / 2
+        in_height * in_width, 1) / 2
 
     # 每个中心点都将有“boxes_per_pixel”个锚框，
     # 所以生成含所有锚框中心的网格，重复了“boxes_per_pixel”次
     out_grid = torch.stack([shift_x, shift_y, shift_x, shift_y],
-                dim=1).repeat_interleave(boxes_per_pixel, dim=0)
+                           dim=1).repeat_interleave(boxes_per_pixel, dim=0)
     output = out_grid + anchor_manipulations
     return output.unsqueeze(0)
+
 
 def show_bboxes(axes, bboxes, labels=None, colors=None):
     """显示所有边界框
 
     Defined in :numref:`sec_anchor`"""
+
     def _make_list(obj, default_values=None):
         if obj is None:
             obj = default_values
@@ -1629,6 +1754,7 @@ def show_bboxes(axes, bboxes, labels=None, colors=None):
             axes.text(rect.xy[0], rect.xy[1], labels[i],
                       va='center', ha='center', fontsize=9, color=text_color,
                       bbox=dict(facecolor=color, lw=0))
+
 
 def box_iou(boxes1, boxes2):
     """计算两个锚框或边界框列表中成对的交并比
@@ -1652,6 +1778,7 @@ def box_iou(boxes1, boxes2):
     inter_areas = inters[:, :, 0] * inters[:, :, 1]
     union_areas = areas1[:, None] + areas2 - inter_areas
     return inter_areas / union_areas
+
 
 def assign_anchor_to_bbox(ground_truth, anchors, device, iou_threshold=0.5):
     """将最接近的真实边界框分配给锚框
@@ -1679,6 +1806,7 @@ def assign_anchor_to_bbox(ground_truth, anchors, device, iou_threshold=0.5):
         jaccard[anc_idx, :] = row_discard
     return anchors_bbox_map
 
+
 def offset_boxes(anchors, assigned_bb, eps=1e-6):
     """对锚框偏移量的转换
 
@@ -1689,6 +1817,7 @@ def offset_boxes(anchors, assigned_bb, eps=1e-6):
     offset_wh = 5 * d2l.log(eps + c_assigned_bb[:, 2:] / c_anc[:, 2:])
     offset = d2l.concat([offset_xy, offset_wh], axis=1)
     return offset
+
 
 def multibox_target(anchors, labels):
     """使用真实边界框标记锚框
@@ -1724,6 +1853,7 @@ def multibox_target(anchors, labels):
     class_labels = torch.stack(batch_class_labels)
     return (bbox_offset, bbox_mask, class_labels)
 
+
 def offset_inverse(anchors, offset_preds):
     """根据带有预测偏移量的锚框来预测边界框
 
@@ -1734,6 +1864,7 @@ def offset_inverse(anchors, offset_preds):
     pred_bbox = d2l.concat((pred_bbox_xy, pred_bbox_wh), axis=1)
     predicted_bbox = d2l.box_center_to_corner(pred_bbox)
     return predicted_bbox
+
 
 def nms(boxes, scores, iou_threshold):
     """对预测边界框的置信度进行排序
@@ -1750,6 +1881,7 @@ def nms(boxes, scores, iou_threshold):
         inds = torch.nonzero(iou <= iou_threshold).reshape(-1)
         B = B[inds + 1]
     return d2l.tensor(keep, device=boxes.device)
+
 
 def multibox_detection(cls_probs, offset_preds, anchors, nms_threshold=0.5,
                        pos_threshold=0.009999999):
@@ -1785,9 +1917,11 @@ def multibox_detection(cls_probs, offset_preds, anchors, nms_threshold=0.5,
         out.append(pred_info)
     return d2l.stack(out)
 
+
 d2l.DATA_HUB['banana-detection'] = (
     d2l.DATA_URL + 'banana-detection.zip',
     '5de26c8fce5ccdea9f91267273464dc968d20d72')
+
 
 def read_data_bananas(is_train=True):
     """读取香蕉检测数据集中的图像和标签
@@ -1795,33 +1929,36 @@ def read_data_bananas(is_train=True):
     Defined in :numref:`sec_object-detection-dataset`"""
     data_dir = d2l.download_extract('banana-detection')
     csv_fname = os.path.join(data_dir, 'bananas_train' if is_train
-                             else 'bananas_val', 'label.csv')
+    else 'bananas_val', 'label.csv')
     csv_data = pd.read_csv(csv_fname)
     csv_data = csv_data.set_index('img_name')
     images, targets = [], []
     for img_name, target in csv_data.iterrows():
         images.append(torchvision.io.read_image(
             os.path.join(data_dir, 'bananas_train' if is_train else
-                         'bananas_val', 'images', f'{img_name}')))
+            'bananas_val', 'images', f'{img_name}')))
         # 这里的target包含（类别，左上角x，左上角y，右下角x，右下角y），
         # 其中所有图像都具有相同的香蕉类（索引为0）
         targets.append(list(target))
     return images, torch.tensor(targets).unsqueeze(1) / 256
 
+
 class BananasDataset(torch.utils.data.Dataset):
     """一个用于加载香蕉检测数据集的自定义数据集
 
     Defined in :numref:`sec_object-detection-dataset`"""
+
     def __init__(self, is_train):
         self.features, self.labels = read_data_bananas(is_train)
         print('read ' + str(len(self.features)) + (f' training examples' if
-              is_train else f' validation examples'))
+                                                   is_train else f' validation examples'))
 
     def __getitem__(self, idx):
         return (self.features[idx].float(), self.labels[idx])
 
     def __len__(self):
         return len(self.features)
+
 
 def load_data_bananas(batch_size):
     """加载香蕉检测数据集
@@ -1833,8 +1970,10 @@ def load_data_bananas(batch_size):
                                            batch_size)
     return train_iter, val_iter
 
+
 d2l.DATA_HUB['voc2012'] = (d2l.DATA_URL + 'VOCtrainval_11-May-2012.tar',
                            '4e443f8a2eca6b1dac8a6c57641b67dd40621a49')
+
 
 def read_voc_images(voc_dir, is_train=True):
     """读取所有VOC图像并标注
@@ -1850,8 +1989,9 @@ def read_voc_images(voc_dir, is_train=True):
         features.append(torchvision.io.read_image(os.path.join(
             voc_dir, 'JPEGImages', f'{fname}.jpg')))
         labels.append(torchvision.io.read_image(os.path.join(
-            voc_dir, 'SegmentationClass' ,f'{fname}.png'), mode))
+            voc_dir, 'SegmentationClass', f'{fname}.png'), mode))
     return features, labels
+
 
 VOC_COLORMAP = [[0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0],
                 [0, 0, 128], [128, 0, 128], [0, 128, 128], [128, 128, 128],
@@ -1865,6 +2005,7 @@ VOC_CLASSES = ['background', 'aeroplane', 'bicycle', 'bird', 'boat',
                'diningtable', 'dog', 'horse', 'motorbike', 'person',
                'potted plant', 'sheep', 'sofa', 'train', 'tv/monitor']
 
+
 def voc_colormap2label():
     """构建从RGB到VOC类别索引的映射
 
@@ -1875,6 +2016,7 @@ def voc_colormap2label():
             (colormap[0] * 256 + colormap[1]) * 256 + colormap[2]] = i
     return colormap2label
 
+
 def voc_label_indices(colormap, colormap2label):
     """将VOC标签中的RGB值映射到它们的类别索引
 
@@ -1883,6 +2025,7 @@ def voc_label_indices(colormap, colormap2label):
     idx = ((colormap[:, :, 0] * 256 + colormap[:, :, 1]) * 256
            + colormap[:, :, 2])
     return colormap2label[idx]
+
 
 def voc_rand_crop(feature, label, height, width):
     """随机裁剪特征和标签图像
@@ -1893,6 +2036,7 @@ def voc_rand_crop(feature, label, height, width):
     feature = torchvision.transforms.functional.crop(feature, *rect)
     label = torchvision.transforms.functional.crop(label, *rect)
     return feature, label
+
 
 class VOCSegDataset(torch.utils.data.Dataset):
     """一个用于加载VOC数据集的自定义数据集
@@ -1915,8 +2059,8 @@ class VOCSegDataset(torch.utils.data.Dataset):
 
     def filter(self, imgs):
         return [img for img in imgs if (
-            img.shape[1] >= self.crop_size[0] and
-            img.shape[2] >= self.crop_size[1])]
+                img.shape[1] >= self.crop_size[0] and
+                img.shape[2] >= self.crop_size[1])]
 
     def __getitem__(self, idx):
         feature, label = voc_rand_crop(self.features[idx], self.labels[idx],
@@ -1925,6 +2069,7 @@ class VOCSegDataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.features)
+
 
 def load_data_voc(batch_size, crop_size):
     """加载VOC语义分割数据集
@@ -1941,8 +2086,10 @@ def load_data_voc(batch_size, crop_size):
         drop_last=True, num_workers=num_workers)
     return train_iter, test_iter
 
+
 d2l.DATA_HUB['cifar10_tiny'] = (d2l.DATA_URL + 'kaggle_cifar10_tiny.zip',
                                 '2068874e4b9a9f0fb07ebe0ad2b29754449ccacd')
+
 
 def read_csv_labels(fname):
     """读取fname来给标签字典返回一个文件名
@@ -1954,12 +2101,14 @@ def read_csv_labels(fname):
     tokens = [l.rstrip().split(',') for l in lines]
     return dict(((name, label) for name, label in tokens))
 
+
 def copyfile(filename, target_dir):
     """将文件复制到目标目录
 
     Defined in :numref:`sec_kaggle_cifar10`"""
     os.makedirs(target_dir, exist_ok=True)
     shutil.copy(filename, target_dir)
+
 
 def reorg_train_valid(data_dir, labels, valid_ratio):
     """将验证集从原始的训练集中拆分出来
@@ -1984,6 +2133,7 @@ def reorg_train_valid(data_dir, labels, valid_ratio):
                                          'train', label))
     return n_valid_per_label
 
+
 def reorg_test(data_dir):
     """在预测期间整理测试集，以方便读取
 
@@ -1993,11 +2143,13 @@ def reorg_test(data_dir):
                  os.path.join(data_dir, 'train_valid_test', 'test',
                               'unknown'))
 
+
 d2l.DATA_HUB['dog_tiny'] = (d2l.DATA_URL + 'kaggle_dog_tiny.zip',
                             '0cb91d09b814ecdc07b50f31f8dcad3e81d6a86d')
 
 d2l.DATA_HUB['ptb'] = (d2l.DATA_URL + 'ptb.zip',
                        '319d85e578af0cdc590547f26231e4e31cdf1e42')
+
 
 def read_ptb():
     """将PTB数据集加载到文本行的列表中
@@ -2008,6 +2160,7 @@ def read_ptb():
     with open(os.path.join(data_dir, 'ptb.train.txt')) as f:
         raw_text = f.read()
     return [line.split() for line in raw_text.split('\n')]
+
 
 def subsample(sentences, vocab):
     """下采样高频词
@@ -2021,11 +2174,12 @@ def subsample(sentences, vocab):
 
     # 如果在下采样期间保留词元，则返回True
     def keep(token):
-        return(random.uniform(0, 1) <
-               math.sqrt(1e-4 / counter[token] * num_tokens))
+        return (random.uniform(0, 1) <
+                math.sqrt(1e-4 / counter[token] * num_tokens))
 
     return ([[token for token in line if keep(token)] for line in sentences],
             counter)
+
 
 def get_centers_and_contexts(corpus, max_window_size):
     """返回跳元模型中的中心词和上下文词
@@ -2046,8 +2200,10 @@ def get_centers_and_contexts(corpus, max_window_size):
             contexts.append([line[idx] for idx in indices])
     return centers, contexts
 
+
 class RandomGenerator:
     """根据n个采样权重在{1,...,n}中随机抽取"""
+
     def __init__(self, sampling_weights):
         """Defined in :numref:`sec_word2vec_data`"""
         # Exclude
@@ -2065,15 +2221,17 @@ class RandomGenerator:
         self.i += 1
         return self.candidates[self.i - 1]
 
+
 generator = RandomGenerator([2, 3, 4])
 [generator.draw() for _ in range(10)]
+
 
 def get_negatives(all_contexts, vocab, counter, K):
     """返回负采样中的噪声词
 
     Defined in :numref:`sec_word2vec_data`"""
     # 索引为1、2、...（索引0是词表中排除的未知标记）
-    sampling_weights = [counter[vocab.to_tokens(i)]**0.75
+    sampling_weights = [counter[vocab.to_tokens(i)] ** 0.75
                         for i in range(1, len(vocab))]
     all_negatives, generator = [], RandomGenerator(sampling_weights)
     for contexts in all_contexts:
@@ -2085,6 +2243,7 @@ def get_negatives(all_contexts, vocab, counter, K):
                 negatives.append(neg)
         all_negatives.append(negatives)
     return all_negatives
+
 
 def batchify(data):
     """返回带有负采样的跳元模型的小批量样本
@@ -2101,6 +2260,7 @@ def batchify(data):
         labels += [[1] * len(context) + [0] * (max_len - len(context))]
     return (d2l.reshape(d2l.tensor(centers), (-1, 1)), d2l.tensor(
         contexts_negatives), d2l.tensor(masks), d2l.tensor(labels))
+
 
 def load_data_ptb(batch_size, max_window_size, num_noise_words):
     """下载PTB数据集，然后将其加载到内存中
@@ -2137,6 +2297,7 @@ def load_data_ptb(batch_size, max_window_size, num_noise_words):
         collate_fn=batchify, num_workers=num_workers)
     return data_iter, vocab
 
+
 d2l.DATA_HUB['glove.6b.50d'] = (d2l.DATA_URL + 'glove.6B.50d.zip',
                                 '0b8703943ccdb6eb788e6f091b8946e82231bc4d')
 
@@ -2149,8 +2310,10 @@ d2l.DATA_HUB['glove.42b.300d'] = (d2l.DATA_URL + 'glove.42B.300d.zip',
 d2l.DATA_HUB['wiki.en'] = (d2l.DATA_URL + 'wiki.en.zip',
                            'c1816da3821ae9f43899be655002f6c723e91b88')
 
+
 class TokenEmbedding:
     """GloVe嵌入"""
+
     def __init__(self, embedding_name):
         """Defined in :numref:`sec_synonyms`"""
         self.idx_to_token, self.idx_to_vec = self._load_embedding(
@@ -2184,6 +2347,7 @@ class TokenEmbedding:
     def __len__(self):
         return len(self.idx_to_token)
 
+
 def get_tokens_and_segments(tokens_a, tokens_b=None):
     """获取输入序列的词元及其片段索引
 
@@ -2196,10 +2360,12 @@ def get_tokens_and_segments(tokens_a, tokens_b=None):
         segments += [1] * (len(tokens_b) + 1)
     return tokens, segments
 
+
 class BERTEncoder(nn.Module):
     """BERT编码器
 
     Defined in :numref:`subsec_bert_input_rep`"""
+
     def __init__(self, vocab_size, num_hiddens, norm_shape, ffn_num_input,
                  ffn_num_hiddens, num_heads, num_layers, dropout,
                  max_len=1000, key_size=768, query_size=768, value_size=768,
@@ -2224,10 +2390,12 @@ class BERTEncoder(nn.Module):
             X = blk(X, valid_lens)
         return X
 
+
 class MaskLM(nn.Module):
     """BERT的掩蔽语言模型任务
 
     Defined in :numref:`subsec_bert_input_rep`"""
+
     def __init__(self, vocab_size, num_hiddens, num_inputs=768, **kwargs):
         super(MaskLM, self).__init__(**kwargs)
         self.mlp = nn.Sequential(nn.Linear(num_inputs, num_hiddens),
@@ -2248,10 +2416,12 @@ class MaskLM(nn.Module):
         mlm_Y_hat = self.mlp(masked_X)
         return mlm_Y_hat
 
+
 class NextSentencePred(nn.Module):
     """BERT的下一句预测任务
 
     Defined in :numref:`subsec_mlm`"""
+
     def __init__(self, num_inputs, **kwargs):
         super(NextSentencePred, self).__init__(**kwargs)
         self.output = nn.Linear(num_inputs, 2)
@@ -2260,10 +2430,12 @@ class NextSentencePred(nn.Module):
         # X的形状：(batchsize,num_hiddens)
         return self.output(X)
 
+
 class BERTModel(nn.Module):
     """BERT模型
 
     Defined in :numref:`subsec_nsp`"""
+
     def __init__(self, vocab_size, num_hiddens, norm_shape, ffn_num_input,
                  ffn_num_hiddens, num_heads, num_layers, dropout,
                  max_len=1000, key_size=768, query_size=768, value_size=768,
@@ -2271,9 +2443,9 @@ class BERTModel(nn.Module):
                  nsp_in_features=768):
         super(BERTModel, self).__init__()
         self.encoder = BERTEncoder(vocab_size, num_hiddens, norm_shape,
-                    ffn_num_input, ffn_num_hiddens, num_heads, num_layers,
-                    dropout, max_len=max_len, key_size=key_size,
-                    query_size=query_size, value_size=value_size)
+                                   ffn_num_input, ffn_num_hiddens, num_heads, num_layers,
+                                   dropout, max_len=max_len, key_size=key_size,
+                                   query_size=query_size, value_size=value_size)
         self.hidden = nn.Sequential(nn.Linear(hid_in_features, num_hiddens),
                                     nn.Tanh())
         self.mlm = MaskLM(vocab_size, num_hiddens, mlm_in_features)
@@ -2290,9 +2462,11 @@ class BERTModel(nn.Module):
         nsp_Y_hat = self.nsp(self.hidden(encoded_X[:, 0, :]))
         return encoded_X, mlm_Y_hat, nsp_Y_hat
 
+
 d2l.DATA_HUB['wikitext-2'] = (
     'https://s3.amazonaws.com/research.metamind.io/wikitext/'
     'wikitext-2-v1.zip', '3c914d17d80b1459be871a5039ac23e752a53cbe')
+
 
 def _read_wiki(data_dir):
     """Defined in :numref:`sec_bert-dataset`"""
@@ -2305,6 +2479,7 @@ def _read_wiki(data_dir):
     random.shuffle(paragraphs)
     return paragraphs
 
+
 def _get_next_sentence(sentence, next_sentence, paragraphs):
     """Defined in :numref:`sec_bert-dataset`"""
     if random.random() < 0.5:
@@ -2314,6 +2489,7 @@ def _get_next_sentence(sentence, next_sentence, paragraphs):
         next_sentence = random.choice(random.choice(paragraphs))
         is_next = False
     return sentence, next_sentence, is_next
+
 
 def _get_nsp_data_from_paragraph(paragraph, paragraphs, vocab, max_len):
     """Defined in :numref:`sec_bert-dataset`"""
@@ -2327,6 +2503,7 @@ def _get_nsp_data_from_paragraph(paragraph, paragraphs, vocab, max_len):
         tokens, segments = d2l.get_tokens_and_segments(tokens_a, tokens_b)
         nsp_data_from_paragraph.append((tokens, segments, is_next))
     return nsp_data_from_paragraph
+
 
 def _replace_mlm_tokens(tokens, candidate_pred_positions, num_mlm_preds,
                         vocab):
@@ -2355,6 +2532,7 @@ def _replace_mlm_tokens(tokens, candidate_pred_positions, num_mlm_preds,
             (mlm_pred_position, tokens[mlm_pred_position]))
     return mlm_input_tokens, pred_positions_and_labels
 
+
 def _get_mlm_data_from_tokens(tokens, vocab):
     """Defined in :numref:`subsec_prepare_mlm_data`"""
     candidate_pred_positions = []
@@ -2374,35 +2552,38 @@ def _get_mlm_data_from_tokens(tokens, vocab):
     mlm_pred_labels = [v[1] for v in pred_positions_and_labels]
     return vocab[mlm_input_tokens], pred_positions, vocab[mlm_pred_labels]
 
+
 def _pad_bert_inputs(examples, max_len, vocab):
     """Defined in :numref:`subsec_prepare_mlm_data`"""
     max_num_mlm_preds = round(max_len * 0.15)
-    all_token_ids, all_segments, valid_lens,  = [], [], []
+    all_token_ids, all_segments, valid_lens, = [], [], []
     all_pred_positions, all_mlm_weights, all_mlm_labels = [], [], []
     nsp_labels = []
     for (token_ids, pred_positions, mlm_pred_label_ids, segments,
          is_next) in examples:
         all_token_ids.append(torch.tensor(token_ids + [vocab['<pad>']] * (
-            max_len - len(token_ids)), dtype=torch.long))
+                max_len - len(token_ids)), dtype=torch.long))
         all_segments.append(torch.tensor(segments + [0] * (
-            max_len - len(segments)), dtype=torch.long))
+                max_len - len(segments)), dtype=torch.long))
         # valid_lens不包括'<pad>'的计数
         valid_lens.append(torch.tensor(len(token_ids), dtype=torch.float32))
         all_pred_positions.append(torch.tensor(pred_positions + [0] * (
-            max_num_mlm_preds - len(pred_positions)), dtype=torch.long))
+                max_num_mlm_preds - len(pred_positions)), dtype=torch.long))
         # 填充词元的预测将通过乘以0权重在损失中过滤掉
         all_mlm_weights.append(
             torch.tensor([1.0] * len(mlm_pred_label_ids) + [0.0] * (
-                max_num_mlm_preds - len(pred_positions)),
-                dtype=torch.float32))
+                    max_num_mlm_preds - len(pred_positions)),
+                         dtype=torch.float32))
         all_mlm_labels.append(torch.tensor(mlm_pred_label_ids + [0] * (
-            max_num_mlm_preds - len(mlm_pred_label_ids)), dtype=torch.long))
+                max_num_mlm_preds - len(mlm_pred_label_ids)), dtype=torch.long))
         nsp_labels.append(torch.tensor(is_next, dtype=torch.long))
     return (all_token_ids, all_segments, valid_lens, all_pred_positions,
             all_mlm_weights, all_mlm_labels, nsp_labels)
 
+
 class _WikiTextDataset(torch.utils.data.Dataset):
     """Defined in :numref:`subsec_prepare_mlm_data`"""
+
     def __init__(self, paragraphs, max_len):
         # 输入paragraphs[i]是代表段落的句子字符串列表；
         # 而输出paragraphs[i]是代表段落的句子列表，其中每个句子都是词元列表
@@ -2419,8 +2600,8 @@ class _WikiTextDataset(torch.utils.data.Dataset):
                 paragraph, paragraphs, self.vocab, max_len))
         # 获取遮蔽语言模型任务的数据
         examples = [(_get_mlm_data_from_tokens(tokens, self.vocab)
-                      + (segments, is_next))
-                     for tokens, segments, is_next in examples]
+                     + (segments, is_next))
+                    for tokens, segments, is_next in examples]
         # 填充输入
         (self.all_token_ids, self.all_segments, self.valid_lens,
          self.all_pred_positions, self.all_mlm_weights,
@@ -2436,6 +2617,7 @@ class _WikiTextDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.all_token_ids)
 
+
 def load_data_wiki(batch_size, max_len):
     """加载WikiText-2数据集
 
@@ -2445,8 +2627,9 @@ def load_data_wiki(batch_size, max_len):
     paragraphs = _read_wiki(data_dir)
     train_set = _WikiTextDataset(paragraphs, max_len)
     train_iter = torch.utils.data.DataLoader(train_set, batch_size,
-                                        shuffle=True, num_workers=num_workers)
+                                             shuffle=True, num_workers=num_workers)
     return train_iter, train_set.vocab
+
 
 def _get_batch_loss_bert(net, loss, vocab_size, tokens_X,
                          segments_X, valid_lens_x,
@@ -2458,17 +2641,19 @@ def _get_batch_loss_bert(net, loss, vocab_size, tokens_X,
                                   valid_lens_x.reshape(-1),
                                   pred_positions_X)
     # 计算遮蔽语言模型损失
-    mlm_l = loss(mlm_Y_hat.reshape(-1, vocab_size), mlm_Y.reshape(-1)) *\
-    mlm_weights_X.reshape(-1, 1)
+    mlm_l = loss(mlm_Y_hat.reshape(-1, vocab_size), mlm_Y.reshape(-1)) * \
+            mlm_weights_X.reshape(-1, 1)
     mlm_l = mlm_l.sum() / (mlm_weights_X.sum() + 1e-8)
     # 计算下一句子预测任务的损失
     nsp_l = loss(nsp_Y_hat, nsp_y)
     l = mlm_l + nsp_l
     return mlm_l, nsp_l, l
 
+
 d2l.DATA_HUB['aclImdb'] = (
     'http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz',
     '01ada507287d82875905620988597833ad4e0903')
+
 
 def read_imdb(data_dir, is_train):
     """读取IMDb评论数据集文本序列和标签
@@ -2484,6 +2669,7 @@ def read_imdb(data_dir, is_train):
                 data.append(review)
                 labels.append(1 if label == 'pos' else 0)
     return data, labels
+
 
 def load_data_imdb(batch_size, num_steps=500):
     """返回数据迭代器和IMDb评论数据集的词表
@@ -2506,6 +2692,7 @@ def load_data_imdb(batch_size, num_steps=500):
                                is_train=False)
     return train_iter, test_iter, vocab
 
+
 def predict_sentiment(net, vocab, sequence):
     """预测文本序列的情感
 
@@ -2514,14 +2701,17 @@ def predict_sentiment(net, vocab, sequence):
     label = torch.argmax(net(sequence.reshape(1, -1)), dim=1)
     return 'positive' if label == 1 else 'negative'
 
+
 d2l.DATA_HUB['SNLI'] = (
     'https://nlp.stanford.edu/projects/snli/snli_1.0.zip',
     '9fcde07509c7e87ec61c640c1b2753d9041758e4')
+
 
 def read_snli(data_dir, is_train):
     """将SNLI数据集解析为前提、假设和标签
 
     Defined in :numref:`sec_natural-language-inference-and-dataset`"""
+
     def extract_text(s):
         # 删除我们不会使用的信息
         s = re.sub('\\(', '', s)
@@ -2529,28 +2719,31 @@ def read_snli(data_dir, is_train):
         # 用一个空格替换两个或多个连续的空格
         s = re.sub('\\s{2,}', ' ', s)
         return s.strip()
+
     label_set = {'entailment': 0, 'contradiction': 1, 'neutral': 2}
     file_name = os.path.join(data_dir, 'snli_1.0_train.txt'
-                             if is_train else 'snli_1.0_test.txt')
+    if is_train else 'snli_1.0_test.txt')
     with open(file_name, 'r') as f:
         rows = [row.split('\t') for row in f.readlines()[1:]]
     premises = [extract_text(row[1]) for row in rows if row[0] in label_set]
     hypotheses = [extract_text(row[2]) for row in rows if row[0] \
-                in label_set]
+                  in label_set]
     labels = [label_set[row[0]] for row in rows if row[0] in label_set]
     return premises, hypotheses, labels
+
 
 class SNLIDataset(torch.utils.data.Dataset):
     """用于加载SNLI数据集的自定义数据集
 
     Defined in :numref:`sec_natural-language-inference-and-dataset`"""
+
     def __init__(self, dataset, num_steps, vocab=None):
         self.num_steps = num_steps
         all_premise_tokens = d2l.tokenize(dataset[0])
         all_hypothesis_tokens = d2l.tokenize(dataset[1])
         if vocab is None:
             self.vocab = d2l.Vocab(all_premise_tokens + \
-                all_hypothesis_tokens, min_freq=5, reserved_tokens=['<pad>'])
+                                   all_hypothesis_tokens, min_freq=5, reserved_tokens=['<pad>'])
         else:
             self.vocab = vocab
         self.premises = self._pad(all_premise_tokens)
@@ -2561,13 +2754,14 @@ class SNLIDataset(torch.utils.data.Dataset):
     def _pad(self, lines):
         return torch.tensor([d2l.truncate_pad(
             self.vocab[line], self.num_steps, self.vocab['<pad>'])
-                         for line in lines])
+            for line in lines])
 
     def __getitem__(self, idx):
         return (self.premises[idx], self.hypotheses[idx]), self.labels[idx]
 
     def __len__(self):
         return len(self.premises)
+
 
 def load_data_snli(batch_size, num_steps=50):
     """下载SNLI数据集并返回数据迭代器和词表
@@ -2587,6 +2781,7 @@ def load_data_snli(batch_size, num_steps=50):
                                             num_workers=num_workers)
     return train_iter, test_iter, train_set.vocab
 
+
 def predict_snli(net, vocab, premise, hypothesis):
     """预测前提和假设之间的逻辑关系
 
@@ -2595,9 +2790,11 @@ def predict_snli(net, vocab, premise, hypothesis):
     premise = torch.tensor(vocab[premise], device=d2l.try_gpu())
     hypothesis = torch.tensor(vocab[hypothesis], device=d2l.try_gpu())
     label = torch.argmax(net([premise.reshape((1, -1)),
-                           hypothesis.reshape((1, -1))]), dim=1)
+                              hypothesis.reshape((1, -1))]), dim=1)
     return 'entailment' if label == 0 else 'contradiction' if label == 1 \
-            else 'neutral'# Alias defined in config.ini
+        else 'neutral'  # Alias defined in config.ini
+
+
 nn_Module = nn.Module
 
 ones = torch.ones
