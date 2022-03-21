@@ -31,6 +31,20 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/softmax/netParams/W.CSV">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/softmax/netParams/b.CSV">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>
