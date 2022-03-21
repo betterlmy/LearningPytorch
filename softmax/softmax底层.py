@@ -97,7 +97,7 @@ class Updator():
 
 
 # @profile
-def loadFashionMnistData(batch_size, resize=None):
+def loadFashionMnistData(batch_size, root="./data", resize=None):
     """下载FashionMnist数据集并加载到内存中
 
     :param batch_size:
@@ -109,8 +109,8 @@ def loadFashionMnistData(batch_size, resize=None):
     if resize:
         trans.insert(0, transforms.Resize(resize))
     trans = transforms.Compose(trans)
-    mnist_train = torchvision.datasets.FashionMNIST(root="./data", train=True, transform=trans, download=False)
-    mnist_test = torchvision.datasets.FashionMNIST(root="./data", train=False, transform=trans, download=False)
+    mnist_train = torchvision.datasets.FashionMNIST(root=root, train=True, transform=trans, download=False)
+    mnist_test = torchvision.datasets.FashionMNIST(root=root, train=False, transform=trans, download=False)
     print("数据集加载成功", len(mnist_train), len(mnist_test))  # 60000 ,10000
 
     num_workers = 4  # 设置读取图片的进程数量 小于cpu的核心数
