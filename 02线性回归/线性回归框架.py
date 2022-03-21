@@ -2,7 +2,7 @@ import random
 import torch
 from torch.utils import data  # 数据处理模块
 
-import d2l1
+import d2l
 import numpy as np
 from torch import nn
 

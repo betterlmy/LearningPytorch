@@ -20,7 +20,7 @@ import requests
 from IPython import display
 from matplotlib import pyplot as plt
 
-# d2l = sys.modules[__name__]
+d2l = sys.modules[__name__]
 
 import numpy as np
 import torch

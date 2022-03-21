@@ -114,6 +114,11 @@ class Net:
     def params_names(self):
         pass
 
+    @property
+    @abstractmethod
+    def params(self):
+        pass
+
 
 class Optimizer:
     """Updator = Optimizer 训练器,指定使用什么损失函数"""
@@ -124,7 +129,7 @@ class Optimizer:
         self.lr = lr
 
     @abstractmethod
-    def step(self):
+    def step(self, net):
         pass
 
 
@@ -134,7 +139,8 @@ class SGD(Optimizer):
     def __init__(self, net, lr, batch_size):
         super().__init__(net, lr, batch_size)
 
-    def step(self):
+    def step(self, net):
+        self.net = net
         return sgd(self.net, self.lr, self.batch_size)
 
 
@@ -144,6 +150,7 @@ def sgd(net, lr, batch_size):
     Defined in :numref:`sec_linear_scratch`"""
     with torch.no_grad():
         for _, param in net.params_names:
+            x = param.grad
             param -= lr * param.grad / batch_size
             param.grad.zero_()
 
@@ -162,10 +169,11 @@ def get_params(net, path='/netParams'):
     path = os.getcwd() + path
     for name, _ in net.params_names:
         if 'b' in name:
-            setattr(net, name,
-                    torch.from_numpy(np.array(pd.read_csv(path + '/' + name + '.CSV'))).type(torch.float).flatten())
+            a = torch.from_numpy(np.array(pd.read_csv(path + '/' + name + '.CSV'))).type(torch.float).flatten()
         else:
-            setattr(net, name, torch.from_numpy(np.array(pd.read_csv(path + '/' + name + '.CSV'))).type(torch.float))
+            a = torch.from_numpy(np.array(pd.read_csv(path + '/' + name + '.CSV'))).type(torch.float)
+        a.requires_grad_(True)
+        setattr(net, name, a)
     return net
 
 
@@ -184,7 +192,7 @@ def cross_entropy(y_hat, y):
     #
     # test1 = y_hat[0, 1]
     # test2 = y_hat[0][1]
-    x = y_hat[range(len(y_hat)), y]
+    x = torch.abs(y_hat[range(len(y_hat)), y])
     #
     return -torch.log(x)
 

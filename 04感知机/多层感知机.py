@@ -5,10 +5,10 @@ from softmax import softmax底层 as softmax
 
 
 def init_params(num_inputs, num_hiddens, num_outputs):
-    W1 = torch.randn(num_inputs, num_hiddens, requires_grad=True)
-    b1 = torch.zeros(num_hiddens, requires_grad=True)
-    W2 = torch.randn(num_hiddens, num_outputs, requires_grad=True)
-    b2 = torch.zeros(num_outputs, requires_grad=True)
+    W1 = nn.Parameter(torch.randn(num_inputs, num_hiddens, requires_grad=True) * 0.01)
+    b1 = nn.Parameter(torch.zeros(num_hiddens, requires_grad=True))
+    W2 = nn.Parameter(torch.randn(num_hiddens, num_outputs, requires_grad=True) * 0.01)
+    b2 = nn.Parameter(torch.zeros(num_outputs, requires_grad=True))
     return W1, b1, W2, b2
 
 
@@ -32,9 +32,13 @@ class PerceptronNet(lmy.Net):
 
     @property
     def params_names(self):
-        params_names = ['W1', 'b1', 'W2', 'b2']
+        params_names = ('W1', 'b1', 'W2', 'b2')
         params_values = (self.W1, self.b1, self.W2, self.b2)
         return zip(params_names, params_values)
+
+    @property
+    def params(self):
+        return [self.W1, self.b1, self.W2, self.b2]
 
 
 def main():
@@ -42,23 +46,24 @@ def main():
     num_inputs, num_outputs = 784, 10
     num_hiddens = 256
     num_epochs = 10
-    just_predict = True
-
+    just_predict = False
+    load_params = False
     train_iter, test_iter = softmax.loadFashionMnistData(batch_size, '../softmax/data')
-    loss = lmy.cross_entropy
+    # loss = lmy.cross_entropy
+    loss = nn.CrossEntropyLoss(reduction='none')
 
     net = PerceptronNet(num_inputs, num_hiddens, num_outputs)
-
-    updator = lmy.SGD(net, .05, batch_size)
+    if load_params:
+        net = lmy.get_params(net)
+    updater = lmy.SGD(net, .1, batch_size)
 
     if not just_predict:
-        softmax.train(net, train_iter, test_iter, loss, num_epochs, updator, save=True)
+        softmax.train(net, train_iter, test_iter, loss, num_epochs, updater, save=True)
+
     softmax.predict(net, test_iter)
 
     del train_iter
     del test_iter
-
-    pass
 
 
 if __name__ == '__main__':

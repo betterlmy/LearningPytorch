@@ -15,7 +15,6 @@ class SoftMaxNet(lmy.Net):
         super().__init__()
         self.W = W
         self.b = b
-        self.count_times = 0
 
     def forward(self, X):
         self.count_times += 1
@@ -27,11 +26,15 @@ class SoftMaxNet(lmy.Net):
         params_values = (self.W, self.b)
         return zip(params_names, params_values)
 
+    @property
+    def params(self):
+        return self.W, self.b
 
-# @profile
+
 def loadFashionMnistData(batch_size, root="./data", resize=None):
     """下载FashionMnist数据集并加载到内存中
 
+    :param root:
     :param batch_size:
     :param resize:
     :return:返回训练集和测试集的DataLoader
@@ -96,11 +99,11 @@ def train_epoch(net, train_iter, loss, updater):
         l = loss(y_hat, y)
         if isinstance(updater, torch.optim.Optimizer):
             updater.zero_grad()
-            l.backward()
+            l.mean().backward()
             updater.step()
         else:
             l.sum().backward()
-            updater.step()
+            updater.step(net)
         metric.add(
             float(l.sum()),  # 损失函数的和
             num_correct(y_hat, y),  # 正确的数量
@@ -112,17 +115,17 @@ def train_epoch(net, train_iter, loss, updater):
 
 
 def train(net, train_iter, test_iter, loss, num_epochs, updater, save=True):
-    animator = lmy.Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[.3, .9],
-                            legend=['train_loss', 'train_acc', 'test_acc'])
+    # animator = lmy.Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[.3, .9],
+    #                         legend=['train_loss', 'train_acc', 'test_acc'])
     for epoch in range(num_epochs):
         print(('*' * 10 + str(epoch + 1) + '*' * 10).center(50))
         train_metrics = train_epoch(net, train_iter, loss, updater)
-        test_acc = net_accuracy(net, test_iter)
-        animator.add(epoch + 1, train_metrics + (test_acc,))
+        # test_acc = net_accuracy(net, test_iter)
+        # animator.add(epoch + 1, train_metrics + (test_acc,))
     if save:
         lmy.save_params(net)
-    animator.fig.show()
-    train_loss, train_acc = train_metrics
+    # animator.fig.show()
+    # train_loss, train_acc = train_metrics
     # assert train_loss < .5, train_loss
     # assert 1 >= train_acc > .7, train_acc
     # assert 1 >= test_acc > 0.7, test_acc
@@ -146,20 +149,22 @@ def predict(net, test_iter):  # @save
 
 # @profile
 def main():
-    batch_size = 64
+    batch_size = 256
     # 加载数据集
     train_iter, test_iter = loadFashionMnistData(batch_size)
 
     num_inputs = 784
     num_outputs = 10
     lr = 0.1
-    num_epochs = 1
+    num_epochs = 10
     net = SoftMaxNet(num_inputs, num_outputs)
-    updater = lmy.SGD(net, batch_size, lr)
+    # updater = torch.optim.SGD(net.params, lr=lr)
+
+    updater = lmy.SGD(net, lr, batch_size)
     # 开始训练网络,训练的同时将参数保存到本地csv文件
-    # train(net, train_iter, test_iter, lmy.cross_entropy, num_epochs, updater)
+    train(net, train_iter, test_iter, lmy.cross_entropy, num_epochs, updater, True)
     # 预测
-    net = lmy.get_params(net)
+    # net = lmy.get_params(net)
     predict(net, test_iter)
     del train_iter
     del test_iter
