@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import torch
-import d2l
+import d2l1
 import sys
 from Timer import Timer
 

@@ -4,7 +4,6 @@ import torchvision
 from memory_profiler import profile
 from torch.utils import data
 from torchvision import transforms
-import d2l
 import lmy
 import pandas as pd
 
@@ -27,16 +26,6 @@ class SoftMaxNet(lmy.Net):
         params_names = ['W', 'b']
         params_values = (self.W, self.b)
         return zip(params_names, params_values)
-
-
-class SGDUpdator(lmy.Optimizer):
-    """使用SGD损失函数的优化器"""
-
-    def __init__(self, net, batch_size, lr):
-        super().__init__(net, batch_size, lr)
-
-    def step(self):
-        return d2l.sgd([self.net.W, self.net.b], self.lr, self.batch_size)
 
 
 # @profile
@@ -77,19 +66,6 @@ def softmax(x):
     X_exp = torch.exp(x)
     partition = X_exp.sum(1, keepdim=True)
     return X_exp / partition
-
-
-def cross_entropy(y_hat, y):
-    """计算交叉熵"""
-    # y_hat 64*10  y 64*1
-    # y中存放了真实的标签下标
-    # 计算交叉熵相当于对正确下标求-Log,越大越好
-    #
-    # test1 = y_hat[0, 1]
-    # test2 = y_hat[0][1]
-    x = y_hat[range(len(y_hat)), y]
-    #
-    return -torch.log(x)
 
 
 def num_correct(y_hat, y):
@@ -152,7 +128,7 @@ def train(net, train_iter, test_iter, loss, num_epochs, updater, save=True):
     # assert 1 >= test_acc > 0.7, test_acc
 
 
-def predict(net, test_iter, n=6):  # @save
+def predict(net, test_iter):  # @save
     """预测标签"""
     for X, y in test_iter:
         break
@@ -179,9 +155,9 @@ def main():
     lr = 0.1
     num_epochs = 1
     net = SoftMaxNet(num_inputs, num_outputs)
-    updater = SGDUpdator(net, batch_size, lr)
+    updater = lmy.SGD(net, batch_size, lr)
     # 开始训练网络,训练的同时将参数保存到本地csv文件
-    train(net, train_iter, test_iter, cross_entropy, num_epochs, updater)
+    # train(net, train_iter, test_iter, lmy.cross_entropy, num_epochs, updater)
     # 预测
     net = lmy.get_params(net)
     predict(net, test_iter)

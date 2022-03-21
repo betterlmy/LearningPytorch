@@ -20,7 +20,7 @@ import requests
 from IPython import display
 from matplotlib import pyplot as plt
 
-d2l = sys.modules[__name__]
+# d2l = sys.modules[__name__]
 
 import numpy as np
 import torch
@@ -96,34 +96,7 @@ def plot(X, Y=None, xlabel=None, ylabel=None, legend=None, xlim=None,
     set_axes(axes, xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
 
 
-class Timer:
-    """记录多次运行时间"""
 
-    def __init__(self):
-        """Defined in :numref:`subsec_linear_model`"""
-        self.times = []
-        self.start()
-
-    def start(self):
-        """启动计时器"""
-        self.tik = time.time()
-
-    def stop(self):
-        """停止计时器并将时间记录在列表中"""
-        self.times.append(time.time() - self.tik)
-        return self.times[-1]
-
-    def avg(self):
-        """返回平均时间"""
-        return sum(self.times) / len(self.times)
-
-    def sum(self):
-        """返回时间总和"""
-        return sum(self.times)
-
-    def cumsum(self):
-        """返回累计时间"""
-        return np.array(self.times).cumsum().tolist()
 
 
 def synthetic_data(w, b, num_examples):
@@ -148,16 +121,6 @@ def squared_loss(y_hat, y):
 
     Defined in :numref:`sec_linear_scratch`"""
     return (y_hat - d2l.reshape(y, y_hat.shape)) ** 2 / 2
-
-
-def sgd(params, lr, batch_size):
-    """小批量随机梯度下降
-
-    Defined in :numref:`sec_linear_scratch`"""
-    with torch.no_grad():
-        for param in params:
-            param -= lr * param.grad / batch_size
-            param.grad.zero_()
 
 
 def load_array(data_arrays, batch_size, is_train=True):
