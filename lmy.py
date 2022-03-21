@@ -7,6 +7,7 @@ import pandas as pd
 import torch
 from IPython import display
 from matplotlib import pyplot as plt
+from torch import nn
 
 
 class Timer:
@@ -150,19 +151,21 @@ def sgd(net, lr, batch_size):
     Defined in :numref:`sec_linear_scratch`"""
     with torch.no_grad():
         for _, param in net.params_names:
-            x = param.grad
             param -= lr * param.grad / batch_size
             param.grad.zero_()
 
 
 def save_params(net, path='/netParams'):
+    if isinstance(net, nn.Module):
+        pass
+        print("nn定义的模型类 写入失败")
+        return False
     path = os.getcwd() + path
-    print(path)
     for names, values in net.params_names:
         if not os.path.exists(path):
             os.makedirs(path)
         pd.DataFrame(values.detach().numpy()).to_csv('netParams/' + names + '.CSV', index=False)  # 不保存列名
-    print("lmy.py--save_params()--写入成功")
+    print("写入成功", path)
 
 
 def get_params(net, path='/netParams'):
@@ -182,6 +185,11 @@ def use_svg_display():
 
     Defined in :numref:`sec_calculus`"""
     display.set_matplotlib_formats('svg')
+
+
+def init_weights(module):
+    if type(module) == nn.Linear:
+        nn.init.normal_(module.weight, std=.1)
 
 
 def cross_entropy(y_hat, y):

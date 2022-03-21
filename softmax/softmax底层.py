@@ -93,7 +93,6 @@ def net_accuracy(net, data_iter):
 def train_epoch(net, train_iter, loss, updater):
     if isinstance(net, torch.nn.Module):
         net.train()  # 设置为训练模式
-    metric = lmy.Accumulator(3)  # 3个变量的累加器
     for X, y in train_iter:
         y_hat = net.forward(X)
         l = loss(y_hat, y)
@@ -104,31 +103,14 @@ def train_epoch(net, train_iter, loss, updater):
         else:
             l.sum().backward()
             updater.step(net)
-        metric.add(
-            float(l.sum()),  # 损失函数的和
-            num_correct(y_hat, y),  # 正确的数量
-            y.numel()  # 总数量
-        )
-        loss_ave = metric[0] / metric[2]
-        accuracy_ave = metric[1] / metric[2]
-    return loss_ave, accuracy_ave
 
 
 def train(net, train_iter, test_iter, loss, num_epochs, updater, save=True):
-    # animator = lmy.Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[.3, .9],
-    #                         legend=['train_loss', 'train_acc', 'test_acc'])
     for epoch in range(num_epochs):
         print(('*' * 10 + str(epoch + 1) + '*' * 10).center(50))
-        train_metrics = train_epoch(net, train_iter, loss, updater)
-        # test_acc = net_accuracy(net, test_iter)
-        # animator.add(epoch + 1, train_metrics + (test_acc,))
+        train_epoch(net, train_iter, loss, updater)
     if save:
         lmy.save_params(net)
-    # animator.fig.show()
-    # train_loss, train_acc = train_metrics
-    # assert train_loss < .5, train_loss
-    # assert 1 >= train_acc > .7, train_acc
-    # assert 1 >= test_acc > 0.7, test_acc
 
 
 def predict(net, test_iter):  # @save
@@ -156,7 +138,7 @@ def main():
     num_inputs = 784
     num_outputs = 10
     lr = 0.1
-    num_epochs = 10
+    num_epochs = 3
     net = SoftMaxNet(num_inputs, num_outputs)
     # updater = torch.optim.SGD(net.params, lr=lr)
 
