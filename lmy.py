@@ -8,6 +8,7 @@ import torch
 from IPython import display
 from matplotlib import pyplot as plt
 from torch import nn
+from torch.utils import data
 
 
 class Timer:
@@ -269,3 +270,35 @@ def plot(X, Y=None, xlabel=None, ylabel=None, legend=None, xlim=None,
         else:
             axes.plot(y, fmt)
     set_axes(axes, xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
+
+
+def load_array(data_arrays, batch_size, is_train=True):
+    """构造一个PyTorch数据迭代器
+
+    Defined in :numref:`sec_linear_concise`"""
+    dataset = data.TensorDataset(*data_arrays)
+    return data.DataLoader(dataset, batch_size, shuffle=is_train)
+
+
+def train_epoch(net, train_iter, loss, updater):
+    if isinstance(net, torch.nn.Module):
+        net.train()  # 设置为训练模式
+    for X, y in train_iter:
+        y_hat = net.forward(X)
+        l = loss(y_hat, y)
+        if isinstance(updater, torch.optim.Optimizer):
+            updater.zero_grad()
+            l.mean().backward()
+            updater.step()
+        else:
+            l.sum().backward()
+            updater.step(net)
+
+
+def print_shape(X, X_name=None):
+    print(f"{X_name}.type: {type(X)}")
+    if hasattr(X, 'shape'):
+        print(f"{X_name}.shape = {X.shape}")
+    else:
+        print(f"{X_name} has no attribute of shape")
+    print("*" * 20)
