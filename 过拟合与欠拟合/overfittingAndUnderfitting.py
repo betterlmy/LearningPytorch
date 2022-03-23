@@ -17,7 +17,7 @@ def net_accuracy(net, data_iter, loss):
 
 
 def train(train_features, test_features, train_labels, test_labels, num_epochs=400):
-    loss = nn.MSELoss(reduction='None')
+    loss = nn.MSELoss(reduction='mean')
     input_shape = train_features.shape[-1]
     net = nn.Sequential(nn.Linear(input_shape, 1, bias=False))  # 网络模型为单层的线性网络
     batch_size = min(10, train_labels.shape[0])
@@ -67,8 +67,8 @@ def main():
     labels += np.random.normal(scale=.1, size=labels.shape)  # 加噪获得最终的y
 
     # 格式转换
-    poly_features = torch.tensor(poly_features)
-    labels = torch.tensor(labels)
+    poly_features = torch.tensor(poly_features, dtype=torch.float32)
+    labels = torch.tensor(labels, dtype=torch.float32)
 
     lmy.print_shape(labels, 'labels')
     # 开始训练并记录
