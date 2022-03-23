@@ -1,6 +1,5 @@
 ## ignore this file ##
-.idea
-.ipynb_checkpoints
-__pycache__
+/.idea
+/.ipynb_checkpoints
+/__pycache__
 .DS_Store
-*test*

@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7170cd08-97ed-402c-9ccb-ba761a175fbe" name="变更" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.ignore" beforeDir="false" afterPath="$PROJECT_DIR$/.ignore" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -290,7 +291,7 @@
       <workItem from="1647908147043" duration="4274000" />
       <workItem from="1647934804385" duration="1276000" />
       <workItem from="1647957711588" duration="2220000" />
-      <workItem from="1648016594561" duration="5710000" />
+      <workItem from="1648016594561" duration="6055000" />
     </task>
     <task id="LOCAL-00001" summary="添加softmax底层的实现">
       <created>1647684602989</created>
