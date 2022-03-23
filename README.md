@@ -2,8 +2,7 @@
 
 ### 根据李沐老师的课程进行学习
 
-![image-20220323184636612](README.assets/image-20220323184636612.png)
-
+<img src="README.assets/image-20220323184636612.png" alt="image-20220323184636612" style="zoom:50%;" />
 [《动手学深度学习 PyTorch版》视频地址](https://space.bilibili.com/1567748478/channel/seriesdetail?sid=358497)
 
 [《动手学深度学习》课本](https://zh-v2.d2l.ai/)
