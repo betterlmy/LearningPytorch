@@ -4,9 +4,11 @@
 
 <img src="README.assets/image-20220323184636612.png" alt="image-20220323184636612" style="zoom:50%;" />
 
+## 纸质文献与连接
 [《动手学深度学习 PyTorch版》视频地址](https://space.bilibili.com/1567748478/channel/seriesdetail?sid=358497)
-[《动手学深度学习》课本](https://zh-v2.d2l.ai/)
 
+[《动手学深度学习》课本](https://zh-v2.d2l.ai/)
+## 章节
 * [计算梯度](./01计算梯度)
 * [线性回归](./02线性回归)
 * [SoftMax](./softmax)
