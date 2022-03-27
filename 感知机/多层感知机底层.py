@@ -54,6 +54,7 @@ def main():
 
     net = PerceptronNet(num_inputs, num_hiddens, num_outputs)
     if load_params:
+        # 从文件中获取参数
         net = lmy.get_params(net)
     updater = lmy.SGD(net, .1, batch_size)
 

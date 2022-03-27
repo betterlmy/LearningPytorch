@@ -109,6 +109,7 @@ def train(net, train_iter, test_iter, loss, num_epochs, updater, save=True):
     for epoch in range(num_epochs):
         print(('*' * 10 + str(epoch + 1) + '*' * 10).center(50))
         train_epoch(net, train_iter, loss, updater)
+
     if save:
         lmy.save_params(net)
 
