@@ -7,6 +7,7 @@ import pandas as pd
 import torch
 import torchvision
 from IPython import display
+from icecream import ic
 from matplotlib import pyplot as plt
 from torch import nn
 from torch.utils import data
@@ -298,11 +299,12 @@ def train_epoch(net, train_iter, loss, updater):
 
 
 def print_shape(X, X_name=None):
-    print(f"{X_name}.type: {type(X)}")
+    ic(X)
+    # print(f"{X_name}.type: {type(X)}")
     if hasattr(X, 'shape'):
-        print(f"{X_name}.shape = {X.shape}")
+        print(f"shape = {X.shape}")
     else:
-        print(f"{X_name} has no attribute of shape")
+        print(f"variable has no attribute of shape")
     print("*" * 20)
 
 
