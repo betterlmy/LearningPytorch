@@ -103,6 +103,10 @@ class Net:
     def __init__(self):
         self.count_times = 0
 
+    def __call__(self, *args, **kwargs):
+        for arg in args:
+            self.forward(arg)
+
     @abstractmethod
     def forward(self, X):
         self.count_times += 1
