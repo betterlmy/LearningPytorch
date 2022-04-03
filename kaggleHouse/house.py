@@ -84,6 +84,7 @@ def data_prepare():
     # print(train_data.iloc[:4, [0, 1, 2, 3, -2, -1]])
     train_features = train_data.iloc[:, 1:-1]
     train_labels = train_data.iloc[:, -1]
+
     # print(train_features.iloc[:4, [0, 1, 2, 3, -2, -1]])
     # print(train_labels[:4])
     test_features = test_data.iloc[:, 1:]
@@ -109,6 +110,7 @@ def data_prepare():
     train_features = torch.tensor(all_features[:num_train].values, dtype=torch.float32)
     test_features = torch.tensor(all_features[num_train:].values, dtype=torch.float32)
     train_labels = torch.tensor(train_labels.values, dtype=torch.float32)
+    print(train_labels.shape)
     return train_features, test_features, train_labels
 
 
@@ -118,8 +120,8 @@ def get_net(num_features):
 
 def log_rmse(net, features, labels, loss):
     # 为了在取对数时进一步稳定该值，将小于1的值设置为1
-    clipped_preds = torch.clamp(net(features), 1, float('inf'))
-    rmse = torch.sqrt(loss(torch.log(labels), torch.log(clipped_preds)))
+    clipped_preds = torch.clamp(net(features).squeeze(-1), 1, float('inf'))
+    rmse = torch.sqrt(loss(torch.log(labels).squeeze(-1), torch.log(clipped_preds)))
     return rmse.item()
 
 
@@ -132,8 +134,12 @@ def train(net, train_features, train_labels, test_features, test_labels, loss, n
 
     for epoch in range(num_epochs):
         for X, y in train_iter:
-            optimizer.zero_grad()  # 初始化
-            l = loss(net(X), y)
+            # print(y.shape, X.shape)
+            optimizer.zero_grad()
+            X = net(X).squeeze(-1)
+            # print(X.shape,y.shape)
+            # 初始化
+            l = loss(X, y)
             l.backward()
             optimizer.step()
 
@@ -149,7 +155,7 @@ def get_k_fold_data(k, i, X, y):
     X_train, y_train, X_valid, y_valid = None, None, None, None
     for j in range(k):
         idx = slice(j * fold_size, (j + 1) * fold_size)
-        print(idx)
+        # print(idx)
         # part表示当前进行验证的数据
         X_part, y_part = X[idx, :], y[idx]
         if j == i:
