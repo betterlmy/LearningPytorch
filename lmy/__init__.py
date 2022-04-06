@@ -5,13 +5,10 @@ from abc import abstractmethod
 import numpy as np
 import pandas as pd
 import torch
-import torchvision
 from IPython import display
-from icecream import ic
 from matplotlib import pyplot as plt
 from torch import nn
 from torch.utils import data
-from torchvision import transforms
 
 
 class Timer:
@@ -105,6 +102,10 @@ class Net:
 
     def __init__(self):
         self.count_times = 0
+
+    def __call__(self, *args, **kwargs):
+        for arg in args:
+            self.forward(arg)
 
     @abstractmethod
     def forward(self, X):
@@ -299,34 +300,25 @@ def train_epoch(net, train_iter, loss, updater):
 
 
 def print_shape(X, X_name=None):
-    ic(X)
-    # print(f"{X_name}.type: {type(X)}")
+    print(f"{X_name}.type: {type(X)}")
     if hasattr(X, 'shape'):
-        print(f"shape = {X.shape}")
+        print(f"{X_name}.shape = {X.shape}")
     else:
-        print(f"variable has no attribute of shape")
+        print(f"{X_name} has no attribute of shape")
     print("*" * 20)
 
 
-
-
-def loadFashionMnistData(batch_size, root="./data", resize=None):
-    """下载FashionMnist数据集并加载到内存中
-
-    :param root:
-    :param batch_size:
-    :param resize:
-    :return:返回训练集和测试集的DataLoader
+def corr2d(X, K):
     """
-    # 通过ToTenser()这个类 将图像数据从PIL类型转为浮点型的tensor类型,并除以255使得所有的像素数值均在0-1之间(归一化)  #需要下载将download改为True
-    trans = [transforms.ToTensor()]
-    if resize:
-        trans.insert(0, transforms.Resize(resize))
-    trans = transforms.Compose(trans)
-    mnist_train = torchvision.datasets.FashionMNIST(root=root, train=True, transform=trans, download=False)
-    mnist_test = torchvision.datasets.FashionMNIST(root=root, train=False, transform=trans, download=False)
-    print("数据集加载成功", len(mnist_train), len(mnist_test))  # 60000 ,10000
-    # print_shape(mnist_test)
-    num_workers = 4  # 设置读取图片的进程数量 小于cpu的核心数
-    return (data.DataLoader(mnist_train, batch_size, shuffle=True, num_workers=num_workers),
-            data.DataLoader(mnist_test, batch_size, shuffle=True, num_workers=num_workers))
+    计算二维互相关运算
+    :param X: 要计算的图像
+    :param K: 卷积核
+    :return:
+    """
+    height, width = K.shape
+    new_size = (X.shape[0] - height + 1, X.shape[1] - width + 1)
+    Y = torch.zeros(new_size)
+    for i in range(new_size[0]):
+        for j in range(new_size[1]):
+            Y[i, j] = (X[i:i + height, j:j + width] * K).sum()
+    return Y
