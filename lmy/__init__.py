@@ -5,10 +5,14 @@ from abc import abstractmethod
 import numpy as np
 import pandas as pd
 import torch
+import torchvision
 from IPython import display
 from matplotlib import pyplot as plt
 from torch import nn
 from torch.utils import data
+from torchvision.transforms import transforms
+
+import d2l
 
 
 class Timer:
@@ -322,3 +326,51 @@ def corr2d(X, K):
         for j in range(new_size[1]):
             Y[i, j] = (X[i:i + height, j:j + width] * K).sum()
     return Y
+
+
+def loadFashionMnistData(batch_size, root="./data", resize=None):
+    """下载FashionMnist数据集并加载到内存中
+
+    :param root:
+    :param batch_size:
+    :param resize:
+    :return:返回训练集和测试集的DataLoader
+    """
+    # 通过ToTenser()这个类 将图像数据从PIL类型转为浮点型的tensor类型,并除以255使得所有的像素数值均在0-1之间(归一化)  #需要下载将download改为True
+    trans = [transforms.ToTensor()]
+    if resize:
+        trans.insert(0, transforms.Resize(resize))
+    trans = transforms.Compose(trans)
+    mnist_train = torchvision.datasets.FashionMNIST(root=root, train=True, transform=trans, download=False)
+    mnist_test = torchvision.datasets.FashionMNIST(root=root, train=False, transform=trans, download=False)
+    print("数据集加载成功", len(mnist_train), len(mnist_test))  # 60000 ,10000
+    print_shape(mnist_test)
+    num_workers = 4  # 设置读取图片的进程数量 小于cpu的核心数
+    return (data.DataLoader(mnist_train, batch_size, shuffle=True, num_workers=num_workers),
+            data.DataLoader(mnist_test, batch_size, shuffle=True, num_workers=num_workers))
+
+
+def get_fashion_mnist_labels(labels):
+    """返回Fashion-MNIST数据集的文本标签"""
+    text_labels = ['t-shirt', 'trouser', 'pullover', 'dress', 'coat',
+                   'sandal', 'shirt', 'sneaker', 'bag', 'ankle boot']
+    return [text_labels[int(i)] for i in labels]
+
+
+def evaluate_accuracy_gpu(net, data_iter, device=None):
+    """使用GPU计算模型在数据集上的精度"""
+    if isinstance(net, nn.Module):
+        net.eval()
+        if not device:
+            device = next(iter(net.parameters())).device
+
+    metric = Accumulator(2)
+    with torch.no_grad():
+        for X, y in data_iter:
+            if isinstance(X, list):
+                X = [x.to(device) for x in X]
+            else:
+                X = X.to(device)
+            y = y.to(device)
+            metric.add(d2l.accuracy(net(X), y), y.numel())
+    return metric[0] / metric[1]
