@@ -1,12 +1,13 @@
 import torch
 import torch.nn as nn
-
-import d2l
 import sys
 
-sys.path.append('/home/lmy/tmpProject/lmy.py')
-import lmy
+sys.path.append('../')
+sys.path.append('../d2l.py')
+import d2l
 
+import lmy
+print(sys.path)
 net1 = nn.Sequential(
     nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, padding=2), nn.Sigmoid(),
     nn.AvgPool2d(kernel_size=2, stride=2),  # 第一次采样
