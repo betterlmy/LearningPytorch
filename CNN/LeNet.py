@@ -1,7 +1,11 @@
 import torch
 import torch.nn as nn
-import lmy
+
 import d2l
+import sys
+
+sys.path.append('/home/lmy/tmpProject/lmy.py')
+import lmy
 
 net1 = nn.Sequential(
     nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, padding=2), nn.Sigmoid(),
@@ -29,13 +33,13 @@ def init_weights(m):
         nn.init.xavier_uniform_(m.weight)
 
 
-def train_GPU(net, train_iter, test_iter, num_epochs, lr):
+def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer, device):
     """用GPU训练模型"""
-
     net.apply(init_weights)
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    print(f"使用{device}进行训练")
-    net.to(device)
+
+    if "cuda" == device.type:
+        net.to(device)
+    timer.start()
     optimizer = torch.optim.SGD(net.parameters(), lr=lr)
     loss = nn.CrossEntropyLoss()
     animator = lmy.Animator(xlabel='epoch',
@@ -43,15 +47,20 @@ def train_GPU(net, train_iter, test_iter, num_epochs, lr):
                             ylim=[.0, 1.0],
                             legend=['train_loss', 'train_acc', 'test_acc']
                             )
-    timer = lmy.Timer()
     num_batches = len(train_iter)
     for epoch in range(num_epochs):
+        if timer.state == 'stopped':
+            timer.start()
         metric = lmy.Accumulator(3)
         net.train()
         for i, (X, y) in enumerate(train_iter):
-            timer.start()
+            if timer.state == 'stopped':
+                timer.start()
             optimizer.zero_grad()
-            X, y = X.to(device), y.to(device)
+            timer.stop()
+            if 'cuda' in device.type:
+                X, y = X.to(device), y.to(device)
+            timer.start()
             y_hat = net(X)
             l = loss(y_hat, y)
             l.backward()
@@ -64,10 +73,11 @@ def train_GPU(net, train_iter, test_iter, num_epochs, lr):
             if (i + 1) % (num_batches // 5) == 0 or i == num_batches - 1:
                 animator.add(epoch + (i + 1) / num_batches, (train_l, train_acc, None))
 
-        test_acc = lmy.evaluate_accuracy_gpu(net, test_iter)
+        test_acc = lmy.evaluate_accuracy_gpu(net, test_iter, device, timer)
         animator.add(epoch + 1, (None, None, test_acc))
+        timer.stop()
         print(f"loss:{train_l:.3f},train_acc:{train_acc:.3f},test_acc:{test_acc:.3f})")
-        print(f"{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {device}")
+        # print(f"{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {device}")
 
 
 def main():
@@ -76,7 +86,11 @@ def main():
 
     lr = .9
     num_epochs = 10
-    train_GPU(net1, train_iter, test_iter, num_epochs, lr)
+    timer = lmy.Timer()
+    device = torch.device('cuda:1') if torch.cuda.is_available() else torch.device('cpu')
+    # device = torch.device('cpu')
+    train_GPU(net1, train_iter, test_iter, num_epochs, lr, timer, device)
+    print(f"{timer.sum():.1f} sec to train 1,000,000 samples of lenet on {device.type}")
 
 
 if __name__ == '__main__':
