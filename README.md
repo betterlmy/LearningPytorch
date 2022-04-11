@@ -19,3 +19,5 @@
 
 * [Kaggle:房价预测](./kaggleHouse)
 * [PyTorch框架](./torch)
+* [CNN](./CNN)
+* [性能优化](./computationalPerformance)
