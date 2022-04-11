@@ -2,6 +2,7 @@ import os
 import time
 from abc import abstractmethod
 
+import GPUtil
 import numpy as np
 import pandas as pd
 import torch
@@ -18,16 +19,24 @@ import d2l
 class Timer:
     """记录多次运行时间"""
 
-    def __init__(self):
+    def __init__(self, name='unnamed Timer'):
         """Defined in :numref:`subsec_linear_model`"""
         self.tik = None
         self.times = []
+        self.name = name
         self.state = 'stopped'
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, *args):
+        print(f"{self.name} has run for {self.stop():.4f}s")
 
     def start(self):
         """启动计时器"""
         if self.state == 'running':
-            print("timer is still running")
+            print(f"{self.name} is still running")
         else:
             self.tik = time.time()
             self.state = 'running'
@@ -40,7 +49,7 @@ class Timer:
             return self.times[-1]
         else:
             print(self.state)
-            print("timer is not running")
+            print(f"{self.name} is not running")
             return None
 
     def avg(self):
@@ -392,3 +401,21 @@ def evaluate_accuracy_gpu(net, data_iter, device=None, timer=None):
             timer.start()
             metric.add(d2l.accuracy(net(X), y), y.numel())
     return metric[0] / metric[1]
+
+
+def getGPU(utilRateLimit=.3, contain_cpu=False):
+    """
+    获取所有的gpu（包括CPU）
+    :return: devices和names
+    """
+    devices = []
+    names = []
+    for gpu in GPUtil.getGPUs():
+        if gpu.memoryUtil < utilRateLimit:
+            """仅挑选GPU使用率小于30%"""
+            names.append(gpu.name)
+            devices.append(torch.device(f'cuda:{gpu.id}'))
+    if contain_cpu:
+        devices.append(torch.device('cpu'))
+        names.append('cpu')
+    return devices, names
