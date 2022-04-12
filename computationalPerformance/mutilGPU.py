@@ -42,7 +42,7 @@ def train(net, num_gpus, batch_size, lr):
     devices, _ = lmy.getGPU(1)
     print(devices)
     devices = devices[:num_gpus]
-    assert devices is None, "None of GPU"
+    assert devices is not None, "None of GPU"
 
     def init_weights(m):
         if type(m) in [nn.Linear, nn.Conv2d]:
