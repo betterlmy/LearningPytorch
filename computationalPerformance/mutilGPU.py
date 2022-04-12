@@ -75,8 +75,10 @@ def main():
 
     with timer1:
         train(net, num_gpus=1, batch_size=256, lr=0.1)
+
     with timer2:
         train(net, num_gpus=2, batch_size=512, lr=0.2)
 
 
-main()
+if __name__ == '__main__':
+    main()
