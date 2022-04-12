@@ -40,8 +40,10 @@ def resnet18(num_classes, in_channels=1):
 def train(net, num_gpus, batch_size, lr):
     train_iter, test_iter = lmy.loadFashionMnistData(batch_size, "../lmy/data")
     devices, _ = lmy.getGPU(1)
+    print(devices)
     devices = devices[:num_gpus]
-    assert devices is None,"None of GPU"
+    assert devices is None, "None of GPU"
+
     def init_weights(m):
         if type(m) in [nn.Linear, nn.Conv2d]:
             nn.init.normal_(m.weight, std=0.01)
