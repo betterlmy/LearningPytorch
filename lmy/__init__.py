@@ -403,7 +403,7 @@ def evaluate_accuracy_gpu(net, data_iter, device=None, timer=None):
     return metric[0] / metric[1]
 
 
-def getGPU(utilRateLimit=.3, contain_cpu=False):
+def getGPU(utilRateLimit=.3, contain_cpu=False,):
     """
     获取所有的gpu（包括CPU）
     :return: devices和names

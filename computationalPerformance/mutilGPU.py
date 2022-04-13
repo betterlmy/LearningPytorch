@@ -48,6 +48,7 @@ def train(net, num_gpus, batch_size, lr):
         if type(m) in [nn.Linear, nn.Conv2d]:
             nn.init.normal_(m.weight, std=0.01)
 
+    net.to(devices[0])
     net.apply(init_weights)
     # 在多个GPU上设置模型
     net = nn.DataParallel(net, device_ids=devices)
@@ -76,10 +77,10 @@ def main():
     timer2 = lmy.Timer("1")
 
     with timer1:
-        train(net, num_gpus=1, batch_size=256, lr=0.1)
+        train(net, num_gpus=4, batch_size=512, lr=0.1)
 
-    with timer2:
-        train(net, num_gpus=2, batch_size=512, lr=0.2)
+    # with timer2:
+    #     train(net, num_gpus=2, batch_size=512, lr=0.2)
 
 
 if __name__ == '__main__':
