@@ -156,6 +156,6 @@ def main():
     torch.save(G.state_dict(), './model/generator.pth')
     torch.save(D.state_dict(), './model/discriminator.pth')
 
-1
+
 if __name__ == '__main__':
     main()
