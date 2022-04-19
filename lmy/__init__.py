@@ -343,8 +343,9 @@ def corr2d(X, K):
     return Y
 
 
-def loadFashionMnistData(batch_size, root="./data", resize=None, trans=None):
+def loadFashionMnistData(batch_size, root="./data", resize=None, trans=None, num_workers=4):
     """下载FashionMnist数据集并加载到内存中
+    :param num_workers:
     :param root:
     :param batch_size:
     :param resize:
@@ -362,7 +363,6 @@ def loadFashionMnistData(batch_size, root="./data", resize=None, trans=None):
     mnist_test = FashionMNIST(root=root, train=False, transform=trans, download=False)
     print(f"数据集加载成功，训练集大小{len(mnist_train)},测试集大小{len(mnist_test)}")  # 60000 ,10000
     # print_shape(mnist_test)
-    num_workers = 4  # 设置读取图片的进程数量 小于cpu的核心数
     return (data.DataLoader(mnist_train, batch_size, shuffle=False, num_workers=num_workers),
             data.DataLoader(mnist_test, batch_size, shuffle=False, num_workers=num_workers))
 
@@ -407,16 +407,16 @@ def getGPU(utilRateLimit=.3, contain_cpu=False, ):
     :return: devices和names
     """
     devices = []
+    if contain_cpu:
+        devices.append(torch.device('cpu'))
     if not torch.cuda.is_available():
-        if contain_cpu:
-            devices.append(torch.device('cpu'))
+        print(devices)
         return devices
     for gpu in GPUtil.getGPUs():
         if gpu.memoryUtil < utilRateLimit:
             """仅挑选GPU使用率小于30%"""
             devices.append(torch.device(f'cuda:{gpu.id}'))
-    if contain_cpu:
-        devices.append(torch.device('cpu'))
+            print(devices)
     return devices
 
 

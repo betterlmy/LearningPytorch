@@ -38,10 +38,11 @@ def resnet18(num_classes, in_channels=1):
 
 
 def train(net, num_gpus, batch_size, lr):
-    train_iter, test_iter = lmy.loadFashionMnistData(batch_size, "../lmy/data")
-    devices, _ = lmy.getGPU(1)
-    print(devices)
+    train_iter, test_iter = lmy.loadFashionMnistData(batch_size, "../lmy/data", num_workers=2)
+    devices = lmy.getGPU(1)
     devices = devices[:num_gpus]
+    print(devices)
+
     assert devices is not None, "None of GPU"
 
     def init_weights(m):
@@ -51,7 +52,7 @@ def train(net, num_gpus, batch_size, lr):
     net.to(devices[0])
     net.apply(init_weights)
     # 在多个GPU上设置模型
-    net = nn.DataParallel(net, device_ids=devices)
+    net = nn.DataParallel(net, device_ids=devices).cuda()
     trainer = torch.optim.SGD(net.parameters(), lr)
     loss = nn.CrossEntropyLoss()
     timer, num_epochs = lmy.Timer(), 10
@@ -62,8 +63,8 @@ def train(net, num_gpus, batch_size, lr):
         for X, y in train_iter:
             trainer.zero_grad()
             X, y = X.to(devices[0]), y.to(devices[0])
-            l = loss(net(X), y)
-            l.backward()
+            loss1 = loss(net(X), y)
+            loss1.backward()
             trainer.step()
         timer.stop()
         animator.add(epoch + 1, (d2l.evaluate_accuracy_gpu(net, test_iter),))
@@ -77,7 +78,7 @@ def main():
     timer2 = lmy.Timer("1")
 
     with timer1:
-        train(net, num_gpus=4, batch_size=512, lr=0.1)
+        train(net, num_gpus=2, batch_size=512, lr=0.1)
 
     # with timer2:
     #     train(net, num_gpus=2, batch_size=512, lr=0.2)

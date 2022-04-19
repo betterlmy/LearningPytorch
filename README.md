@@ -16,8 +16,8 @@
 * [过拟合与欠拟合](./过拟合与欠拟合)
 * [权重衰减](./WeightDecay)
 * [丢弃法](./dropout)
-
 * [Kaggle:房价预测](./kaggleHouse)
 * [PyTorch框架](./torch)
 * [CNN](./CNN)
-* [性能优化](./computationalPerformance)
+* [性能优化(GPU并行)](./computationalPerformance)
+* [GAN](./GAN)

@@ -6,6 +6,7 @@ from torchvision import transforms
 from torchvision import datasets
 from torchvision.utils import save_image
 import os
+import lmy
 
 # 创建文件夹
 if not os.path.exists('./img'):
@@ -19,11 +20,11 @@ def to_img(x):
     return out
 
 
-batch_size = 128
+batch_size = 256
 num_epoch = 100
 z_dimension = 100
 
-# 图形啊处理过程
+# 图形处理过程
 img_transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=(0.5,), std=(0.5,))
@@ -85,12 +86,14 @@ class generator(nn.Module):
         return x
 
 
+devices = lmy.getGPU()
+print(devices)
 # 创建对象
 D = discriminator()
 G = generator()
 if torch.cuda.is_available():
-    D = D.cuda()
-    G = G.cuda()
+    D = D.to(devices[0])
+    G = G.to(devices[0])
 
 #########判别器训练train#####################
 # 分为两部分：1、真的图像判别为真；2、假的图像判别为假
@@ -103,17 +106,19 @@ d_optimizer = torch.optim.Adam(D.parameters(), lr=0.0003)
 g_optimizer = torch.optim.Adam(G.parameters(), lr=0.0003)
 
 ###########################进入训练##判别器的判断过程#####################
-
+timer = lmy.Timer()
 for epoch in range(num_epoch):  # 进行多个epoch的训练
+    timer.start()
     for i, (img, _) in enumerate(dataloader):
+
         num_img = img.size(0)
         # view()函数作用是将一个多行的Tensor,拼接成一行
         # 第一个参数是要拼接的tensor,第二个参数是-1
         # =============================训练判别器==================
         img = img.view(num_img, -1)  # 将图片展开为28*28=784
-        real_img = Variable(img)  # 将tensor变成Variable放入计算图中
-        real_label = Variable(torch.ones(num_img))  # 定义真实的图片label为1
-        fake_label = Variable(torch.zeros(num_img))  # 定义假的图片的label为0
+        real_img = Variable(img).to(devices[0])  # 将tensor变成Variable放入计算图中
+        real_label = Variable(torch.ones(num_img)).to(devices[0])  # 定义真实的图片label为1
+        fake_label = Variable(torch.zeros(num_img)).to(devices[0])  # 定义假的图片的label为0
 
         # 计算真实图片的损失
         real_out = D(real_img).squeeze()  # 将真实图片放入判别器中
@@ -121,7 +126,7 @@ for epoch in range(num_epoch):  # 进行多个epoch的训练
         real_scores = real_out  # 得到真实图片的判别值，输出的值越接近1越好
 
         # 计算假的图片的损失
-        z = Variable(torch.randn(num_img, z_dimension))  # 随机生成一些噪声
+        z = Variable(torch.randn(num_img, z_dimension)).to(devices[0])  # 随机生成一些噪声
         fake_img = G(z)  # 随机噪声放入生成网络中，生成一张假的图片
         fake_out = D(fake_img).squeeze()  # 判别器判断假的图片
         d_loss_fake = criterion(fake_out, fake_label)  # 得到假的图片的loss
@@ -143,7 +148,7 @@ for epoch in range(num_epoch):  # 进行多个epoch的训练
 
         # 计算假的图片的损失
 
-        z = Variable(torch.randn(num_img, z_dimension))  # 得到随机噪声
+        z = Variable(torch.randn(num_img, z_dimension)).to(devices[0])  # 得到随机噪声
         fake_img = G(z)  # 随机噪声输入到生成器中，得到一副假的图片
         output = D(fake_img).squeeze()  # # 经过判别器得到的结果
         g_loss = criterion(output, real_label)  # 得到的假的图片与真实的图片的label的loss
@@ -167,6 +172,7 @@ for epoch in range(num_epoch):  # 进行多个epoch的训练
 
         fake_images = to_img(fake_img.cpu().data)
         save_image(fake_images, './img/fake_images-{}.png'.format(epoch + 1))
+    print(f'{timer.stop():.5f}s/epoch')
 # 保存模型
 torch.save(G.state_dict(), './generator.pth')
 torch.save(D.state_dict(), './discriminator.pth')
