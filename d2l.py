@@ -20,6 +20,8 @@ import requests
 from IPython import display
 from matplotlib import pyplot as plt
 
+import lmy
+
 d2l = sys.modules[__name__]
 
 import numpy as np
@@ -291,6 +293,7 @@ class Animator:
         self.config_axes()
         display.display(self.fig)
         display.clear_output(wait=True)
+        plt.savefig('./tmp.svg')
 
 
 def train_ch3(net, train_iter, test_iter, loss, num_epochs, updater):
@@ -450,7 +453,7 @@ def evaluate_accuracy_gpu(net, data_iter, device=None):
     return metric[0] / metric[1]
 
 
-def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
+def train_ch6(net, train_iter, test_iter, num_epochs, lr, device='cpu'):
     """用GPU训练模型(在第六章定义)
 
     Defined in :numref:`sec_lenet`"""
@@ -464,9 +467,9 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
     net.to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=lr)
     loss = nn.CrossEntropyLoss()
-    animator = d2l.Animator(xlabel='epoch', xlim=[1, num_epochs],
-                            legend=['train loss', 'train acc', 'test acc'])
-    timer, num_batches = d2l.Timer(), len(train_iter)
+    animator = Animator(xlabel='epoch', xlim=[1, num_epochs],
+                        legend=['train loss', 'train acc', 'test acc'])
+    timer, num_batches = lmy.Timer(), len(train_iter)
     for epoch in range(num_epochs):
         # 训练损失之和，训练准确率之和，样本数
         metric = d2l.Accumulator(3)
@@ -485,8 +488,7 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
             train_l = metric[0] / metric[2]
             train_acc = metric[1] / metric[2]
             if (i + 1) % (num_batches // 5) == 0 or i == num_batches - 1:
-                animator.add(epoch + (i + 1) / num_batches,
-                             (train_l, train_acc, None))
+                animator.add(epoch + (i + 1) / num_batches, (train_l, train_acc, None))
         test_acc = evaluate_accuracy_gpu(net, test_iter)
         animator.add(epoch + 1, (None, None, test_acc))
     print(f'loss {train_l:.3f}, train acc {train_acc:.3f}, '

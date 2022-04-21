@@ -38,7 +38,7 @@ def resnet18(num_classes, in_channels=1):
 
 
 def train(net, num_gpus, batch_size, lr):
-    train_iter, test_iter = lmy.loadFashionMnistData(batch_size, "../lmy/data", num_workers=2)
+    train_iter, test_iter = lmy.loadFashionMnistData(batch_size, "../lmy/data")
     devices = lmy.getGPU(1)
     devices = devices[:num_gpus]
     print(devices)
@@ -75,13 +75,9 @@ def train(net, num_gpus, batch_size, lr):
 def main():
     net = resnet18(10)
     timer1 = lmy.Timer("1")
-    timer2 = lmy.Timer("1")
 
     with timer1:
         train(net, num_gpus=2, batch_size=512, lr=0.1)
-
-    # with timer2:
-    #     train(net, num_gpus=2, batch_size=512, lr=0.2)
 
 
 if __name__ == '__main__':

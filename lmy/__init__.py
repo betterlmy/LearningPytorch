@@ -3,6 +3,7 @@ import time
 from abc import abstractmethod
 
 import GPUtil
+import matplotlib_inline
 import numpy as np
 import pandas as pd
 import torch
@@ -13,6 +14,7 @@ from torch import nn
 from torch.utils import data
 from torchvision.datasets import FashionMNIST
 from torchvision.transforms import transforms
+from tqdm import tqdm
 
 import d2l
 
@@ -89,12 +91,14 @@ class Accumulator:
 
 
 class Animator:
-    def __init__(self, xlabel=None, ylabel=None, legend=None, xlim=None, ylim=None, xscale='linear', yscale='linear',
+    def __init__(self, name='fig', xlabel=None, ylabel=None, legend=None, xlim=None, ylim=None, xscale='linear',
+                 yscale='linear',
                  fmts=('-', 'm--', 'g-.', 'r:'), nrows=1, ncols=1,
                  figsize=(3.5, 2.5)):
         if legend is None:
             legend = []
         display.set_matplotlib_formats('svg')  # 使用svg格式在Jupyter中显示绘图
+        self.name = name
         self.fig, self.axes = plt.subplots(nrows, ncols, figsize=figsize)
         if nrows * ncols == 1:
             self.axes = [self.axes, ]
@@ -120,8 +124,9 @@ class Animator:
         for x, y, fmt in zip(self.X, self.Y, self.fmts):
             self.axes[0].plot(x, y, fmt)
         self.config_axes()
-        display.display(self.fig)
-        plt.savefig(f'{self.fig}.svg')
+        # display.display(self.fig)
+        # plt.savefig(f'{self.fig}.svg')
+        plt.savefig(f'{self.name}.svg')
 
 
 class Net:
@@ -242,7 +247,7 @@ def set_figsize(figsize=(3.5, 2.5)):
     """设置matplotlib的图表大小
 
     Defined in :numref:`sec_calculus`"""
-    display.set_matplotlib_formats('svg')
+    matplotlib_inline.backend_inline.set_matplotlib_formats('svg')
     plt.rcParams['figure.figsize'] = figsize
 
 
@@ -343,7 +348,7 @@ def corr2d(X, K):
     return Y
 
 
-def loadFashionMnistData(batch_size, root="./data", resize=None, trans=None, num_workers=4):
+def loadFashionMnistData(batch_size, root="../lmy/data", resize=None, trans=None, num_workers=0):
     """下载FashionMnist数据集并加载到内存中
     :param num_workers:
     :param root:
@@ -353,15 +358,17 @@ def loadFashionMnistData(batch_size, root="./data", resize=None, trans=None, num
     :return:返回训练集和测试集的DataLoader
     """
     # 通过ToTenser()这个类 将图像数据从PIL类型转为浮点型的tensor类型,并除以255使得所有的像素数值均在0-1之间(归一化)
+    transform = None
     if not trans:
         trans = [transforms.ToTensor()]
-        trans = transforms.Compose(trans)
+        transform = transforms.Compose(trans)
     if resize:
         trans.insert(0, transforms.Resize(resize))
-        trans = transforms.Compose(trans)
-    mnist_train = FashionMNIST(root=root, train=True, transform=trans, download=False)
-    mnist_test = FashionMNIST(root=root, train=False, transform=trans, download=False)
-    print(f"数据集加载成功，训练集大小{len(mnist_train)},测试集大小{len(mnist_test)}")  # 60000 ,10000
+        transform = transforms.Compose(trans)
+    mnist_train = FashionMNIST(root=root, train=True, transform=transform, download=False)
+    mnist_test = FashionMNIST(root=root, train=False, transform=transform, download=False)
+    print(
+        f"FashionMNIST数据集加载成功，训练集大小:{len(mnist_train)},测试集大小:{len(mnist_test)},数据集shape:{mnist_test[0][0].shape}")  # 60000 ,10000
     # print_shape(mnist_test)
     return (data.DataLoader(mnist_train, batch_size, shuffle=False, num_workers=num_workers),
             data.DataLoader(mnist_test, batch_size, shuffle=False, num_workers=num_workers))
@@ -401,32 +408,44 @@ def evaluate_accuracy_gpu(net, data_iter, device=None, timer=None):
     return metric[0] / metric[1]
 
 
-def getGPU(utilRateLimit=.3, contain_cpu=False, ):
+def getGPU(utilRateLimit=.3, contain_cpu=False):
     """
     获取所有的gpu（包括CPU）
+    :param utilRateLimit: 使用率限制
+    :param contain_cpu: 是否包含CPU，如果包含则返回值第一个为CPU
     :return: devices和names
     """
     devices = []
     if contain_cpu:
         devices.append(torch.device('cpu'))
     if not torch.cuda.is_available():
-        print(devices)
         return devices
     for gpu in GPUtil.getGPUs():
         if gpu.memoryUtil < utilRateLimit:
             """仅挑选GPU使用率小于30%"""
             devices.append(torch.device(f'cuda:{gpu.id}'))
-            print(devices)
     return devices
 
 
-def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer, devices, init_weights):
+def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices=None, num_devices=1,
+              init_weight=init_weights):
     """用GPU训练模型"""
+    if devices is None:
+        devices = [torch.device('cpu')]
+    assert devices.__class__ == list, "devices must be a list"
+    assert num_devices < 0 or num_devices.__class__ == int, "num_devices must be int or None"
+    while num_devices > len(devices):
+        num_devices = len(devices)
+        print("设备数量不足,已自动调整")
+    net.apply(init_weight)
+
+    devices = devices[:num_devices]
     if "cpu" not in devices[0].type:
         net.to(devices[0])
-    net.apply(init_weights)
     timer.start()
-    net = nn.DataParallel(net, device_ids=devices)
+    if num_devices > 1:
+        net = nn.DataParallel(net, device_ids=devices)
+    print(f"训练设备{devices}")
     optimizer = torch.optim.SGD(net.parameters(), lr=lr)
     loss = nn.CrossEntropyLoss()
     animator = Animator(xlabel='epoch',
@@ -435,7 +454,7 @@ def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer, devices, init_w
                         legend=['train_loss', 'train_acc', 'test_acc']
                         )
     num_batches = len(train_iter)
-    for epoch in range(num_epochs):
+    for epoch in tqdm(range(num_epochs), unit='epoch'):
         if timer.state == 'stopped':
             timer.start()
         metric = Accumulator(3)
@@ -463,5 +482,9 @@ def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer, devices, init_w
         test_acc = evaluate_accuracy_gpu(net, test_iter, devices[0], timer)
         animator.add(epoch + 1, (None, None, test_acc))
         timer.stop()
-        print(f"loss:{train_l:.3f},train_acc:{train_acc:.3f},test_acc:{test_acc:.3f})")
-        # print(f"{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {device}")
+        # print(f"{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {devices}")
+    print(f"loss:{train_l * 100:.3f}%,train_acc:{train_acc * 100:.3f}%,test_acc:{test_acc * 100:.3f}%)")
+
+
+if __name__ == "__main__":
+    loadFashionMnistData(128)

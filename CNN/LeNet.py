@@ -7,7 +7,8 @@ sys.path.append('../d2l.py')
 import d2l
 
 import lmy
-print(sys.path)
+
+
 net1 = nn.Sequential(
     nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, padding=2), nn.Sigmoid(),
     nn.AvgPool2d(kernel_size=2, stride=2),  # 第一次采样
@@ -34,7 +35,7 @@ def init_weights(m):
         nn.init.xavier_uniform_(m.weight)
 
 
-def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer, device):
+def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=lmy.Timer(), device=torch.device('cpu')):
     """用GPU训练模型"""
     net.apply(init_weights)
 

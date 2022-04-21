@@ -40,10 +40,10 @@ class Discriminator(nn.Module):
 
 
 class Generator(nn.Module):
-    def __init__(self):
+    def __init__(self, input_dim=100):
         super().__init__()
         self.generator = nn.Sequential(
-            nn.Linear(100, 256),  # 用线性变换将输入映射到256维 输入是100维
+            nn.Linear(input_dim, 256),  # 用线性变换将输入映射到256维 输入是100维
             nn.ReLU(True),  # relu激活
             nn.Linear(256, 256),  # 线性变换
             nn.ReLU(True),  # relu激活
@@ -57,8 +57,8 @@ class Generator(nn.Module):
 
 def main():
     batch_size = 128
-    num_epochs = 200
-    z_dimension = 100
+    num_epochs = 100
+    z_dimension = 200
     # 图像预处理
     img_transform = transforms.Compose([
         transforms.ToTensor(),  # 将图像转换为tensor
@@ -66,20 +66,20 @@ def main():
     ])
     # 读取数据
     mnist_train = FashionMNIST(root='../lmy/data/', train=True, transform=img_transform, download=False)
-    bags_data = []
-    for i, (img, label) in enumerate(mnist_train):
-        if label == 8:
-            bags_data.append(img)
+    bags_data = [data for data, label in mnist_train if label == 8]
     train_iter = DataLoader(bags_data, batch_size, shuffle=False)
+
     D = Discriminator()
-    G = Generator()
-    devices = lmy.getGPU(contain_cpu=True)
+    G = Generator(z_dimension)
+    devices = lmy.getGPU(1, contain_cpu=False)
 
     cuda_available = False
     if len(devices) > 1:
         cuda_available = True
-        D = nn.DataParallel(D, device_ids=devices)
-        G = nn.DataParallel(G, device_ids=devices)
+        D = D.to(devices[0])
+        G = G.to(devices[0])
+        # D = nn.DataParallel(D, device_ids=devices)
+        # G = nn.DataParallel(G, device_ids=devices)
 
     criterion = nn.BCELoss()  # 二进制交叉熵 因为结果只有True和False
     g_optimizer = torch.optim.Adam(G.parameters(), lr=.0005)
@@ -155,4 +155,7 @@ def main():
 
 
 if __name__ == '__main__':
+    timer2 = lmy.Timer("总时间")
+    timer2.start()
     main()
+    print(timer2.stop())
