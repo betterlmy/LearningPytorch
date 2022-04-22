@@ -19,5 +19,8 @@
 * [Kaggle:房价预测](./kaggleHouse)
 * [PyTorch框架](./torch)
 * [CNN](./CNN)
+  * CNN底层
+  * LeNet
+  * 
 * [性能优化(GPU并行)](./computationalPerformance)
 * [GAN](./GAN)
