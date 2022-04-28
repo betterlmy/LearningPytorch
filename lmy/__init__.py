@@ -102,7 +102,8 @@ class Animator:
         self.fig, self.axes = plt.subplots(nrows, ncols, figsize=figsize)
         if nrows * ncols == 1:
             self.axes = [self.axes, ]
-        self.config_axes = lambda: set_axes(self.axes[0], xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
+        self.config_axes = lambda: set_axes(
+            self.axes[0], xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
         self.X, self.Y, self.fmts = None, None, fmts
 
     def add(self, x, y):
@@ -200,7 +201,8 @@ def save_params(net, path='/netParams'):
     for names, values in net.params_names:
         if not os.path.exists(path):
             os.makedirs(path)
-        pd.DataFrame(values.detach().numpy()).to_csv('netParams/' + names + '.CSV', index=False)  # 不保存列名
+        pd.DataFrame(values.detach().numpy()).to_csv(
+            'netParams/' + names + '.CSV', index=False)  # 不保存列名
     print("写入成功", path)
 
 
@@ -208,9 +210,11 @@ def get_params(net, path='/netParams'):
     path = os.getcwd() + path
     for name, _ in net.params_names:
         if 'b' in name:
-            a = torch.from_numpy(np.array(pd.read_csv(path + '/' + name + '.CSV'))).type(torch.float).flatten()
+            a = torch.from_numpy(np.array(pd.read_csv(
+                path + '/' + name + '.CSV'))).type(torch.float).flatten()
         else:
-            a = torch.from_numpy(np.array(pd.read_csv(path + '/' + name + '.CSV'))).type(torch.float)
+            a = torch.from_numpy(np.array(pd.read_csv(
+                path + '/' + name + '.CSV'))).type(torch.float)
         a.requires_grad_(True)
         setattr(net, name, a)
     return net
@@ -365,8 +369,10 @@ def loadFashionMnistData(batch_size, root="../lmy/data", resize=None, trans=None
     if resize:
         trans.insert(0, transforms.Resize(resize))
         transform = transforms.Compose(trans)
-    mnist_train = FashionMNIST(root=root, train=True, transform=transform, download=False)
-    mnist_test = FashionMNIST(root=root, train=False, transform=transform, download=False)
+    mnist_train = FashionMNIST(
+        root=root, train=True, transform=transform, download=False)
+    mnist_test = FashionMNIST(root=root, train=False,
+                              transform=transform, download=False)
     print(
         f"FashionMNIST数据集加载成功，训练集大小:{len(mnist_train)},测试集大小:{len(mnist_test)},数据集shape:{mnist_test[0][0].shape}")  # 60000 ,10000
     # print_shape(mnist_test)
@@ -427,7 +433,7 @@ def getGPU(utilRateLimit=.3, contain_cpu=False):
     return devices
 
 
-def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices=None, num_devices=1,
+def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices=getGPU(contain_cpu=False), num_devices=1,
               init_weight=init_weights):
     """用GPU训练模型"""
     if devices is None:
@@ -477,13 +483,15 @@ def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices
             train_l = metric[0] / metric[2]
             train_acc = metric[1] / metric[2]
             if (i + 1) % (num_batches // 5) == 0 or i == num_batches - 1:
-                animator.add(epoch + (i + 1) / num_batches, (train_l, train_acc, None))
+                animator.add(epoch + (i + 1) / num_batches,
+                             (train_l, train_acc, None))
 
         test_acc = evaluate_accuracy_gpu(net, test_iter, devices[0], timer)
         animator.add(epoch + 1, (None, None, test_acc))
         timer.stop()
         # print(f"{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {devices}")
-    print(f"loss:{train_l * 100:.3f}%,train_acc:{train_acc * 100:.3f}%,test_acc:{test_acc * 100:.3f}%)")
+    print(
+        f"loss:{train_l * 100:.3f}%,train_acc:{train_acc * 100:.3f}%,test_acc:{test_acc * 100:.3f}%)")
 
 
 if __name__ == "__main__":
