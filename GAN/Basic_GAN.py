@@ -5,11 +5,11 @@ from torchvision import transforms
 from torchvision.datasets import FashionMNIST
 from torch.utils.data import DataLoader
 from torchvision.utils import save_image
-import os
-import sys
 
-sys.path.append('../')
+import os,sys
+sys.path.append(os.path.abspath("./"))
 import lmy
+
 
 if not os.path.exists('./img'):
     os.mkdir('./img')
@@ -65,7 +65,7 @@ def main():
         transforms.Normalize((0.5,), (0.5,))  # 归一化
     ])
     # 读取数据
-    mnist_train = FashionMNIST(root='../lmy/data/', train=True, transform=img_transform, download=False)
+    mnist_train = FashionMNIST(root='./lmy/data/', train=True, transform=img_transform, download=False)
     bags_data = [data for data, label in mnist_train if label == 8]
     train_iter = DataLoader(bags_data, batch_size, shuffle=False)
 
