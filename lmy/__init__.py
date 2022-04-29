@@ -436,18 +436,18 @@ def getGPU(utilRateLimit=.3, contain_cpu=False):
 def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices=getGPU(contain_cpu=False), num_devices=1,
               init_weight=init_weights):
     """用GPU训练模型"""
-    if devices is None:
-        devices = [torch.device('cpu')]
+
     assert devices.__class__ == list, "devices must be a list"
     assert num_devices < 0 or num_devices.__class__ == int, "num_devices must be int or None"
+    
     if num_devices > len(devices):
         num_devices = len(devices)
         print("设备数量不足,已自动调整")
     net.apply(init_weight)
-    if devices is None:
+    if num_devices == 0:
         devices = [torch.device('cpu')]
-    devices = devices[:num_devices]
-    if "cpu" not in devices[0].type:
+    else:
+        devices = devices[:num_devices]
         net.to(devices[0])
     timer.start()
     if num_devices > 1:
