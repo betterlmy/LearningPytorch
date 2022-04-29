@@ -433,13 +433,13 @@ def getGPU(utilRateLimit=.3, contain_cpu=False):
     return devices
 
 
-def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices=getGPU(contain_cpu=False), num_devices=1,
+def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices=getGPU(utilRateLimit=.6, contain_cpu=False), num_devices=1,
               init_weight=init_weights):
     """用GPU训练模型"""
-
+    print(devices)
     assert devices.__class__ == list, "devices must be a list"
     assert num_devices < 0 or num_devices.__class__ == int, "num_devices must be int or None"
-    
+
     if num_devices > len(devices):
         num_devices = len(devices)
         print("设备数量不足,已自动调整")
