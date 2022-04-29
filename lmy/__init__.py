@@ -440,11 +440,12 @@ def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices
         devices = [torch.device('cpu')]
     assert devices.__class__ == list, "devices must be a list"
     assert num_devices < 0 or num_devices.__class__ == int, "num_devices must be int or None"
-    while num_devices > len(devices):
+    if num_devices > len(devices):
         num_devices = len(devices)
         print("设备数量不足,已自动调整")
     net.apply(init_weight)
-
+    if devices is None:
+        devices = [torch.device('cpu')]
     devices = devices[:num_devices]
     if "cpu" not in devices[0].type:
         net.to(devices[0])
