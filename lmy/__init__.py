@@ -91,13 +91,19 @@ class Accumulator:
 
 
 class Animator:
+    @staticmethod
+    def mkdir():
+        if not os.path.exists('./result'):
+            os.mkdir('./result')
+
     def __init__(self, name='fig', xlabel=None, ylabel=None, legend=None, xlim=None, ylim=None, xscale='linear',
                  yscale='linear',
                  fmts=('-', 'm--', 'g-.', 'r:'), nrows=1, ncols=1,
                  figsize=(3.5, 2.5)):
+        self.mkdir()
         if legend is None:
             legend = []
-        display.set_matplotlib_formats('svg')  # 使用svg格式在Jupyter中显示绘图
+        display.set_matplotlib_formats('svg')  
         self.name = name
         self.fig, self.axes = plt.subplots(nrows, ncols, figsize=figsize)
         if nrows * ncols == 1:
@@ -125,9 +131,7 @@ class Animator:
         for x, y, fmt in zip(self.X, self.Y, self.fmts):
             self.axes[0].plot(x, y, fmt)
         self.config_axes()
-        # display.display(self.fig)
-        # plt.savefig(f'{self.fig}.svg')
-        plt.savefig(f'{self.name}.svg')
+        plt.savefig(f'result/{self.name}.svg')
 
 
 class Net:
@@ -433,7 +437,7 @@ def getGPU(utilRateLimit=.3, contain_cpu=False):
     return devices
 
 
-def train_GPU_FASHION_MNIST(net, num_epochs, lr, batch_size=256, num_devices=1, devices=getGPU(contain_cpu=False)):
+def train_GPU_FASHION_MNIST(net, num_epochs, lr, batch_size=256, num_devices=1, devices=getGPU(contain_cpu=False), resize=None, net_name='net'):
     """使用GPU训练模型,数据集FASHION_MNIST
 
     Args:
@@ -444,13 +448,13 @@ def train_GPU_FASHION_MNIST(net, num_epochs, lr, batch_size=256, num_devices=1, 
         num_devices (int, optional): . Defaults to 1.
         devices (list, optional): 训练的设备列表. Defaults to getGPU(contain_cpu=False).
     """
-    train_iter, test_iter = loadFashionMnistData(batch_size)
+    train_iter, test_iter = loadFashionMnistData(batch_size, resize=resize)
     train_GPU(net, train_iter, test_iter, num_epochs, lr,
-              num_devices=num_devices, devices=devices)
+              num_devices=num_devices, devices=devices, net_name=net_name)
 
 
 def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices=getGPU(utilRateLimit=.6, contain_cpu=False), num_devices=1,
-              init_weight=init_weights):
+              init_weight=init_weights, net_name="net"):
     """用GPU训练模型"""
     assert devices.__class__ == list, "devices must be a list"
     assert num_devices < 0 or num_devices.__class__ == int, "num_devices must be int or None"
@@ -470,11 +474,14 @@ def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices
     print(f"训练设备{devices}")
     optimizer = torch.optim.SGD(net.parameters(), lr=lr)
     loss = nn.CrossEntropyLoss()
-    animator = Animator(xlabel='epoch',
-                        xlim=[1, num_epochs],
-                        ylim=[.0, 1.0],
-                        legend=['train_loss', 'train_acc', 'test_acc']
-                        )
+
+    animator = Animator(
+        name=net_name,
+        xlabel='epoch',
+        xlim=[1, num_epochs],
+        ylim=[.0, 1.0],
+        legend=['train_loss', 'train_acc', 'test_acc']
+    )
     num_batches = len(train_iter)
     for epoch in tqdm(range(num_epochs), unit='epoch'):
         if timer.state == 'stopped':
