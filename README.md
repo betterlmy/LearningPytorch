@@ -52,7 +52,9 @@
 * [VGG](./CNN/VGG.ipynb)
 * [NiN](./CNN/NiN.ipynb)
 * [GoogLeNet](./CNN/GoogLeNet.ipynb)
-
+* [BatchNorm](./CNN/BatchNorm.ipynb)
+* [ResNet](./CNN/ResNet.ipynb)
+* [DenseNet](./CNN/DenseNet.ipynb)
 ### [性能优化(GPU并行)](./computationalPerformance)
 
 * [异步计算](./computationalPerformance/asynchronousComputation.ipynb)
