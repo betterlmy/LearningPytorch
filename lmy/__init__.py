@@ -433,6 +433,22 @@ def getGPU(utilRateLimit=.3, contain_cpu=False):
     return devices
 
 
+def train_GPU_FASHION_MNIST(net, num_epochs, lr, batch_size=256, num_devices=1, devices=getGPU(contain_cpu=False)):
+    """使用GPU训练模型,数据集FASHION_MNIST
+
+    Args:
+        net (nn.Module): 要训练的网络模型
+        num_epochs (int): 
+        lr (int): 学习率
+        batch_size (int, optional): . Defaults to 256.
+        num_devices (int, optional): . Defaults to 1.
+        devices (list, optional): 训练的设备列表. Defaults to getGPU(contain_cpu=False).
+    """
+    train_iter, test_iter = loadFashionMnistData(batch_size)
+    train_GPU(net, train_iter, test_iter, num_epochs, lr,
+              num_devices=num_devices, devices=devices)
+
+
 def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices=getGPU(utilRateLimit=.6, contain_cpu=False), num_devices=1,
               init_weight=init_weights):
     """用GPU训练模型"""
@@ -493,7 +509,3 @@ def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices
         # print(f"{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {devices}")
     print(
         f"loss:{train_l * 100:.3f}%,train_acc:{train_acc * 100:.3f}%,test_acc:{test_acc * 100:.3f}%)")
-
-
-if __name__ == "__main__":
-    loadFashionMnistData(128)
