@@ -309,11 +309,20 @@ def plot(X, Y=None, xlabel=None, ylabel=None, legend=None, xlim=None,
 
 
 def load_array(data_arrays, batch_size, is_train=True):
-    """构造一个PyTorch数据迭代器
+    """构造一个数据迭代器
 
-    Defined in :numref:`sec_linear_concise`"""
+    Args:
+        data_arrays (tuple of arrays): 包含训练数据的元组,特征和标签
+        batch_size (int): 批量大小
+        is_train (bool, optional): 是否是训练模式,如果是训练模式则会打乱返回的顺序. Defaults to True.
+
+    Returns:
+        DataLoader: 数据加载器
+    """
     dataset = data.TensorDataset(*data_arrays)
-    return data.DataLoader(dataset, batch_size, shuffle=is_train)
+    dl = data.DataLoader(dataset, batch_size, shuffle=is_train)
+    print("数据加载完成")
+    return dl
 
 
 def train_epoch(net, train_iter, loss, updater):

@@ -65,3 +65,6 @@
 ### [GAN](./GAN)
 
 * [BASIC_GAN](./GAN/BASIC.ipynb)
+
+### [RNN](./RNN)
+* [SequenctModel](./RNN/SequenctModel.ipynb)
