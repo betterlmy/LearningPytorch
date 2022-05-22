@@ -15,7 +15,9 @@ from torch.utils import data
 from torchvision.datasets import FashionMNIST
 from torchvision.transforms import transforms
 from tqdm import tqdm
-
+import sys,os
+sys.path.append(os.path.abspath("../"))
+import lmy
 import d2l
 
 
@@ -195,7 +197,24 @@ def sgd(net, lr, batch_size):
             param -= lr * param.grad / batch_size
             param.grad.zero_()
 
-
+def show_heatmaps(matrices,xlabel,ylabel,titiles=None,figsize=(2.5,2.5),cmap='Reds'):
+    """显示矩阵热图"""
+    """在后面的章节中,我们将经常调用show_heatmaps函数来显示注意力权重。"""
+    d2l.use_svg_display()
+    num_rows,num_cols = matrices.shape[0],matrices.shape[1]
+    fig,axes = d2l.plt.subplots(num_rows,num_cols,figsize=figsize,
+                                sharex=True,sharey=True,squeeze=False)
+    for i,(row_axes,row_matrices) in enumerate(zip(axes,matrices)):
+        for j,(ax,matrix) in enumerate(zip(row_axes,row_matrices)):
+            pcm = ax.imshow(matrix.detach().numpy(),cmap=cmap)
+            if i == num_rows -1:
+                ax.set_xlabel(xlabel)
+            if j == 0:
+                ax.set_ylabel(ylabel)
+            if titiles:
+                ax.set_title(titiles[j])
+    fig.colorbar(pcm,ax=axes,shrink=.6)
+    
 def save_params(net, path='/netParams'):
     if isinstance(net, nn.Module):
         pass
@@ -382,8 +401,11 @@ def loadFashionMnistData(batch_size, root="../lmy/data", resize=None, trans=None
     if resize:
         trans.insert(0, transforms.Resize(resize))
         transform = transforms.Compose(trans)
+    print(os.path.abspath(root))
+
     mnist_train = FashionMNIST(
         root=root, train=True, transform=transform, download=False)
+
     mnist_test = FashionMNIST(root=root, train=False,
                               transform=transform, download=False)
     print(
@@ -437,6 +459,9 @@ def getGPU(utilRateLimit=.3, contain_cpu=False):
     devices = []
     if contain_cpu:
         devices.append(torch.device('cpu'))
+    # if torch.backends.mps.is_available():
+    #     devices.append(torch.device('mps'))
+    #     return devices
     if not torch.cuda.is_available():
         return devices
     for gpu in GPUtil.getGPUs():

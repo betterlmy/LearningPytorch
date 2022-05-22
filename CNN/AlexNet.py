@@ -40,20 +40,18 @@ def init_weights(m):
 
 
 def main():
+
     # X = torch.randn(1, 3, 224, 224)
     # macs, params = profile(net1, (X,))
     #
     # print(macs, params)
     # # print(layer.__class__.__name__, 'output shape:\t', X.shape)
     batch_size = 128
-    train_iter, test_iter = lmy.loadFashionMnistData(batch_size, "../lmy/data", resize=224)
+    train_iter, test_iter = lmy.loadFashionMnistData(batch_size, "./lmy/data", resize=224)
     lr = .01
     num_epochs = 10
     timer = lmy.Timer("AlexNet")
-    devices, _ = lmy.getGPU()
-
-    devices = devices[:2]
-    lmy.train_GPU(net, train_iter, test_iter, num_epochs, lr, timer, devices, init_weights)
+    lmy.train_GPU(net, train_iter, test_iter, num_epochs, lr, timer)
 
 
 if __name__ == "__main__":
