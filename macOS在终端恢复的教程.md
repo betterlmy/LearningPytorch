@@ -6,7 +6,10 @@ tail -f /var/log/install.log | grep .pkg
 2. 进入App Store 下载macOS系统, 
 ![](img/2022-06-08-13-00-39.png)
 复制拦截到的url
+macOS12
 https://swcdn.apple.com/content/downloads/16/08/012-06873-A_636SHHRD4L/528ojpmw00mulgfjsz9k50modkj31a9v0p/InstallAssistant.pkg
+macOS13
+https://swcdn.apple.com/content/downloads/38/13/012-20267-A_8II0GZVCTD/vsifpgvw3a3xjgyznf6415vin9xv7a6ws5/InstallAssistant.pkg
 
 ## 进入恢复模式后
 在终端中输入 resetpassword，回车
