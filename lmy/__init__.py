@@ -549,3 +549,14 @@ def train_GPU(net, train_iter, test_iter, num_epochs, lr, timer=Timer(), devices
         # print(f"{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {devices}")
     print(
         f"loss:{train_l * 100:.3f}%,train_acc:{train_acc * 100:.3f}%,test_acc:{test_acc * 100:.3f}%)")
+
+
+
+def print_shape(*args):
+    shapes = []
+    for arg in args:
+        if hasattr(arg,"shape"):
+            shapes.append(arg.shape)
+    print(f"shape:")
+    for shape in shapes:
+        print(shape)
