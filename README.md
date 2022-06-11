@@ -68,3 +68,7 @@
 
 ### [RNN](./RNN)
 * [SequenctModel](./RNN/SequenctModel.ipynb)
+* 
+### [AttentionMechanism](./AttentionMechanism)
+* [可视化Visualization](./AttentionMechanism/visualizatoin.ipynb)
+* [评价函数ScoreFunction](./AttentionMechanism/scoreFunction.ipynb)
