@@ -17,8 +17,7 @@ from torchvision.transforms import transforms
 from tqdm import tqdm
 import sys,os
 sys.path.append(os.path.abspath("../"))
-import lmy
-import d2l
+# import lmy
 
 
 class Timer:
@@ -560,3 +559,17 @@ def print_shape(*args):
     print(f"shape:")
     for shape in shapes:
         print(shape)
+
+def to_image(image,path=None):
+    toPIL = transforms.ToPILImage() #这个函数可以将张量转为PIL图片，由小数转为0-255之间的像素值
+    
+    pic = toPIL(image)
+    if path is not None:
+        pic.save(path)
+    return pic
+    
+if __name__ == "__main__":
+    pass
+    # to_image(torch.tensor([[56,56],
+    #                      [32,32],
+    #                      [64,64]]),"./1.jpg")
